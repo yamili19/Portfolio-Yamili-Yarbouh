@@ -1,0 +1,40 @@
+.container {
+  margin-bottom: 20px;
+}
+
+.card-header {
+  background-color: #ffc0cb !important;
+}
+
+.card-header h5 {
+  color: #ff69b4 !important;
+}
+
+.table {
+  background-color: #fff5f7 !important;
+}
+
+.table th {
+  background-color: #ffc0cb;
+  font-weight: bold;
+  color: #ff69b4 !important;
+}
+
+.table td {
+  color: #495057 !important;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #ffe5ea !important;
+}
+
+.btn {
+  font-size: 0.8rem;
+  margin-right: 5px;
+}
+
+.table th,
+.table td {
+  text-align: center;
+  vertical-align: middle;
+}

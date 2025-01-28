@@ -1,0 +1,44 @@
+.card-header {
+  background-color: rgba(255, 192, 203, 0.7) !important;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.card-header h5 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #ff69b4;
+  font-family: "Arial", sans-serif;
+  font-weight: bold;
+}
+
+/*
+.form-outline {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.form-outline .form-control {
+  padding: 0.75rem 1rem;
+}
+
+.form-outline .form-label {
+  position: absolute;
+  top: 0.5rem;
+  left: 1rem;
+  color: #6c757d;
+  transition: all 0.3s ease;
+}
+
+.form-outline .form-control:focus + .form-label,
+.form-outline .form-control:not(:placeholder-shown) + .form-label {
+  top: -0.75rem;
+  left: 1rem;
+  font-size: 0.75rem;
+  color: #495057;
+}
+*/
+
+.card {
+  margin-top: 20px;
+  border: 2px solid #ff00ff !important; /* Color rosa fucsia */
+}
