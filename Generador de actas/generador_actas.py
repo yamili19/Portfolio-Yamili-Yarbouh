@@ -509,7 +509,12 @@ def registrar():
     if condicion not in ["REGULAR", "LIBRE"]:
         messagebox.showerror("Error", "La condición debe ser LIBRE o REGULAR.")
         return
-
+    if curso.startswith("SELECCIONE UN CURSO..."):
+        messagebox.showerror("Error", "Seleccione un curso.")
+        return
+    if materia.startswith("SELECCIONE UNA MATERIA..."):
+        messagebox.showerror("Error", "Seleccione una materia.")
+        return
     dni = str(dni)
 
     # Verificar si el archivo Excel está abierto
@@ -589,7 +594,7 @@ def registrar():
     try:
         # Sobreescribir el archivo Excel con openpyxl
         with pd.ExcelWriter(archivo_excel, engine="openpyxl", mode="w") as writer:
-            df.to_excel(writer, index=False)
+            df.to_excel(writer, sheet_name="PERMISOS", index=False)
         generar_actas()
         ajustar_columnas_automatically(archivo_excel, "PERMISOS")
         ajustar_columnas_automatically(archivo_excel, "MMO")
@@ -776,6 +781,66 @@ for col in columnas:
 # Configuración para expansión del frame_tabla
 ventana.columnconfigure(0, weight=1)
 ventana.rowconfigure(8, weight=1)
+
+# Función para manejar la edición de celdas
+def editar_celda(event):
+    try:
+        # Obtener la fila y columna seleccionada
+        region = tabla.identify_region(event.x, event.y)
+        if region == "cell":
+            col = tabla.identify_column(event.x)
+            fila = tabla.identify_row(event.y)
+            col_index = int(col.replace("#", "")) - 1
+            col_name = tabla.heading(col)["text"]
+
+            # Obtener el valor actual de la celda
+            item = tabla.item(fila)
+            valor_actual = item["values"][col_index]
+
+            # Crear un Combobox para editar la celda
+            if col_name.startswith("CURSO"):
+                combobox = ttk.Combobox(ventana, values=cursos, state="readonly")
+                combobox.set(valor_actual)
+            elif col_name.startswith("ESPACIO CURRICULAR"):
+                modalidad = item["values"][3]  # Asumiendo que la modalidad está en la columna 3
+                if modalidad == "MMO":
+                    combobox = ttk.Combobox(ventana, values=materias_mmo, state="readonly")
+                elif modalidad == "TEM":
+                    combobox = ttk.Combobox(ventana, values=materias_tem, state="readonly")
+                combobox.set(valor_actual)
+            else:
+                return
+
+            # Obtener las coordenadas y dimensiones de la celda seleccionada
+            x, y, width, height = tabla.bbox(fila, col)
+            print(x, y)
+
+            # Posicionar el Combobox encima de la celda seleccionada
+            combobox.place(x=x, y=y+751//2, width=width, height=height)
+
+            # Función para guardar el valor seleccionado
+            def guardar_valor(event):
+                nuevo_valor = combobox.get()
+                tabla.set(fila, col, nuevo_valor)
+                combobox.destroy()
+
+                # Actualizar el DataFrame
+                df.at[int(item["values"][0]) - 1, col_name] = nuevo_valor
+
+                # Guardar los cambios en el archivo Excel
+                with pd.ExcelWriter(archivo_excel, engine="openpyxl", mode="w") as writer:
+                    df.to_excel(writer, sheet_name="PERMISOS", index=False)
+                    df.to_excel(writer, sheet_name="MMO", index=False)
+                    df.to_excel(writer, sheet_name="TEM", index=False)
+
+            # Asignar la función de guardar al evento de selección
+            combobox.bind("<<ComboboxSelected>>", guardar_valor)
+            combobox.bind("<FocusOut>", guardar_valor)
+    except:
+        messagebox.showerror("Error", "Error al editar, por favor cierre el archivo excel.")
+
+# Asignar la función de edición al evento de doble clic
+tabla.bind("<Double-1>", editar_celda)
 
 # Generar lista de cursos (sin el símbolo ° repetido)
 cursos = [f"{año}°{div}°" for año in range(1, 8) for div in range(1, 3)]
