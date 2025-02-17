@@ -47,54 +47,78 @@ except FileNotFoundError:
     wb.security = WorkbookProtection(workbookPassword=contraseña, lockStructure=True)
     wb.save(archivo_excel)
 
-# Listas de materias para las modalidades MMO y TEM
-materias_mmo = [
-    "LENGUA Y LITERATURA I", "LENGUA EXTRANJERA I", "HISTORIA I", "GEOGRAFÍA I",
-    "FORMACIÓN ETICA Y CIUDADANA I", "EDUC. ARTÍSTICA: MÚSICA", "EDUCACIÓN FÍSICA I",
-    "MATEMATICA I", "BIOLOGÍA I", "FÍSICA QUÍMICA I", "TECNOLOGÍA DE LOS MATERIALES",
-    "DIBUJO TÉCNICO I", "TALLER I: CARP. ELECT. HERRERIA", "LENGUA Y LITERATURA II",
-    "LENGUA EXTRANJERA II", "HISTORIA II", "GEOGRAFÍA II", "FORMACIÓN ETICA Y CIUDADANA II",
-    "EDUC. ARTÍSTICA: ARTES VISUALES", "EDUCACIÓN FÍSICA II", "MATEMATICA II", "BIOLOGÍA II",
-    "FÍSICA II", "QUIMICA II", "TECNOLOGÍA DE LOS PROCESOS", "DIBUJO TÉCNICO II", "TALLER II",
-    "LENGUA Y LITERATURA III", "LENGUA EXTRANJERA III", "HISTORIA III", "GEOGRAFÍA III",
-    "FORMACIÓN ETICA Y CIUDADANA III", "EDUC. ARTÍSTICA: TEATRO/ DANZA", "EDUCACIÓN FÍSICA III",
-    "MATEMATICA III", "BIOLOGÍA III", "FÍSICA III", "QUIMICA III", "TIC`S", "REPRES.GRAFICA - CAD",
-    "TALLER III - CONSTRUCCIONES", "LENGUA Y LITERATURA IV", "LENGUA EXTRANJERA IV",
-    "HISTORIA DE CATAMARCA Y EL NOA", "GEOGRAFÍA DE CATAMARCA Y EL NOA", "EDUCACIÓN FÍSICA",
-    "MATEMATICA IV", "FÍSICA IV", "QUÍMICA IV", "GEOMETRÍA DESCRIPTIVA",
-    "ESTATICA Y RESISTENCIA DE LOS MATERIALES", "SISTEMAS CONSTRUCTIVOS I", "TALLER IV- CONSTRUCCIONES",
-    "LENGUA Y LITERATURA V", "INGLÉS TÉCNICO I", "CONSTRUCCION CIUDADANA - ESI", "EDUCACIÓN FÍSICA",
-    "MATEMATICA V", "QUÍMICA APLICADA", "SISTEMAS CONSTRUCTIVO II", "ARQUITECTURA", "DISEÑO Y CALCULO DE ESTRUCTURAS",
-    "PROYECTO I", "TALLER V - TERMINACIONES HºAº", "LENGUA Y LITERATURA VI", "INGLÉS TÉCNICO II",
-    "EDUCACIÓN FÍSICA", "MATEMATICA VI", "MARCO JURÍDICO DE LOS PROC. CONSTRUCTIVOS",
-    "CÓMPUTOS Y PRESUPUESTOS", "TOPOGRAFÍA", "SISTEMAS ELECTRICOS Y ELECTRÓNICOS DOMICILIARIOS",
-    "SISTEMAS DE MECANIZADO CNC", "SISMORRESISTENTE CONSTRUCCIONES", "GESTION DE OBRAS", "PROYECTO FINAL"
-]
+# Agrega estas constantes al inicio del código
+ARCHIVO_MMO = obtener_ruta_recurso(r"recursos\materias_mmo.csv")
+ARCHIVO_TEM = obtener_ruta_recurso(r"recursos\materias_tem.csv")
 
-materias_tem = [
-    "FORMACIÓN ETICA Y CIUDADANA III", "EDUC. ARTÍSTICA: TEATRO/ DANZA", "EDUCACIÓN FÍSICA III",
-    "MATEMATICA III", "BIOLOGÍA III", "FÍSICA III", "QUIMICA III", "TIC`S", "DIBUJO III",
-    "TALLER III - ELECT- MECANICA - HERRERIA", "LENGUA Y LITERATURA IV", "LENGUA EXTRANJERA IV",
-    "EDUCACIÓN FÍSICA", "GEOGRAFÍA DE CATAMARCA Y EL NOA", "HISTORIA DE CATAMARCA Y EL NOA",
-    "ANALISIS MATEMATICO I", "FÍSICA IV", "QUÍMICA APLICADA", "TRANSF. Y SINTESIS DE LOS MATERIALES",
-    "MAQUINAS ELÉCTRICAS Y AUTOMATISMOS I", "DISEÑO Y PROCESAM MECÁNICO I", "INST. Y APLIC DE LA ENERGÍA I",
-    "ELECTRICIDAD", "MECÁNICA", "METALURGIA", "LENGUA Y LITERATURA", "INGLES TECNICO I", "EDUCACION FÍSICA",
-    "CONSTRUCCION CIUDADANA - ESI", "ANÁLISIS MATEMATICO II", "MECÁNICA Y MECANISMOS",
-    "RESIST. Y ENSAYO DE LOS MATERIALES", "LAB. DE MEDICIONES ELÉCTRICAS", "MÁQUINAS ELÉCTRICAS Y AUTOMATISMOS II",
-    "DISEÑO Y PROCESAM MECÁNICO II", "ELECTROTECNIA I", "INST. Y APLIC DE LA ENERGÍA II", "REDES ELÉCTRICAS",
-    "MECÁNICA", "SOLDADURA", "LENGUA Y LITERATURA", "INGLÉS TECNICO II", "EDUCACIÓN FÍSICA",
-    "MATEMATICA APLICADA", "TERMOD. Y MÁQ. TÉRMICAS", "GESTIÓN Y ADMIN. INDUSTRIAL",
-    "MÁQUINAS ELÉCTRICAS Y AUTOMATISMOS III", "DISEÑO Y PROCESAM. MECÁNICO III", "INST. Y APLICAC. DE LA ENERGÍA III",
-    "SISTEMAS MECÁNICOS I", "CONTROL Y AUTOMATISMOS INDUSTRIALES", "ELECTROTECNIA II", "SOLDADURA II",
-    "INST. DE CONTROL AUTOMATIZADO", "SISTEMAS DE MECANIZADO", "COMUNICACIÓN", "EDUCACIÓN FÍSICA",
-    "GESTION DE PYMES INDUSTRIALES", "DERECHO DEL TRABAJO", "LAB. DE METROLOGÍA Y CONTROL DE CALIDAD",
-    "MONTAJE ELECTROMECÁNICO", "MANTENIMIENTO INDUSTRIAL", "SEGURIDAD, HIGIENE Y PROT. AMBIENTAL",
-    "SISTEMAS MECÁNICOS II", "ELECTRÓNICA INDUSTRIAL", "TALLER DE ELECTRÓNICA", "PROY. Y DISEÑO ELECTROMECÁNICO",
-    "PROY. Y DISEÑO DE INST. ELÉCTRICAS", "SISTEMAS DE MECANIZADO CNC", "PASANTÍA"
-]
+# Modifica las listas iniciales de materias para cargar desde archivos
+# (Reemplaza las listas existentes de materias_mmo y materias_tem con esto)
+import csv
+def cargar_materias():
+    global materias_mmo, materias_tem
+    
+    # Cargar materias MMO
+    try:
+        # Leer el archivo CSV y separar correctamente por comas
+        with open(ARCHIVO_MMO, "r", encoding="latin-1") as file:
+            reader = csv.reader(file, delimiter=",")  # Indicamos que las materias están separadas por comas
+            materias_mmo = [materia.strip() for row in reader for materia in row]  # Aplanamos la lista y limpiamos espacios
+    except FileNotFoundError:
+        materias_mmo = []  # Lista vacía si no existe el archivo
 
-materias_mmo_con_sufijo = [f"{materia} (MMO)" for materia in materias_mmo]
-materias_tem_con_sufijo = [f"{materia} (TEM)" for materia in materias_tem]
+    # Cargar materias TEM
+    try:
+        # Leer el archivo CSV y separar correctamente por comas
+        with open(ARCHIVO_TEM, "r", encoding="latin-1") as file:
+            reader = csv.reader(file, delimiter=",")  # Indicamos que las materias están separadas por comas
+            materias_tem = [materia.strip() for row in reader for materia in row]  # Aplanamos la lista y limpiamos espacios
+    except FileNotFoundError:
+        materias_tem = []  # Lista vacía si no existe el archivo
+
+cargar_materias()
+
+# Función para guardar las materias en archivos
+def guardar_materias(modalidad, materia):
+    archivo = ARCHIVO_MMO if modalidad == "MMO" else ARCHIVO_TEM
+    with open(archivo, "a", encoding="utf-8") as f:
+        f.write(f"{materia}\n")
+
+# Función para agregar materias
+def agregar_materia():
+    nueva_materia = entrada_nueva_materia.get().strip().upper()
+    modalidad = combobox_modalidad_materia.get().upper()
+    
+    if not nueva_materia:
+        messagebox.showerror("Error", "Ingrese el nombre de la materia")
+        return
+    
+    if modalidad not in ["MMO", "TEM"]:
+        messagebox.showerror("Error", "Seleccione una modalidad válida")
+        return
+    
+    # Verificar si la materia ya existe
+    materias = materias_mmo if modalidad == "MMO" else materias_tem
+    if nueva_materia in materias:
+        messagebox.showerror("Error", "La materia ya existe")
+        return
+    
+    # Agregar a la lista correspondiente
+    if modalidad == "MMO":
+        materias_mmo.append(nueva_materia)
+    else:
+        materias_tem.append(nueva_materia)
+    
+    # Guardar en archivo
+    guardar_materias(modalidad, nueva_materia)
+    
+    # Actualizar combobox de materias
+    actualizar_materias(None)
+    
+    messagebox.showinfo("Éxito", "Materia agregada correctamente")
+    entrada_nueva_materia.delete(0, tk.END)
+    combobox_modalidad_materia.set("Seleccione modalidad...")
+
+
 
 
 from docx.shared import Pt
@@ -877,6 +901,28 @@ tk.Label(ventana, text="Condición:", anchor="e", font=("Calibri", 11)).grid(row
 combobox_condicion = ttk.Combobox(ventana, values=["LIBRE", "REGULAR"], state="readonly", justify="center", font=("Calibri", 11))
 combobox_condicion.grid(row=6, column=1, padx=10, pady=10, sticky="ew")
 combobox_condicion.set("Seleccione una condicion...")
+
+# Agregar estos elementos en la interfaz gráfica (antes de crear la tabla)
+frame_materias = tk.Frame(ventana, bg="lightblue")
+frame_materias.grid(row=7, column=0, columnspan=4, padx=10, pady=10, sticky="ew")
+
+tk.Label(frame_materias, text="Agregar Nueva Materia:", bg="lightblue", font=("Calibri", 11)).grid(row=0, column=0, padx=5)
+
+entrada_nueva_materia = tk.Entry(frame_materias, font=("Calibri", 11))
+entrada_nueva_materia.grid(row=0, column=1, padx=5)
+
+combobox_modalidad_materia = ttk.Combobox(frame_materias, values=["MMO", "TEM"], state="readonly", font=("Calibri", 11))
+combobox_modalidad_materia.grid(row=0, column=2, padx=5)
+combobox_modalidad_materia.set("Seleccione modalidad...")
+
+boton_agregar_materia = tk.Button(frame_materias, text="Agregar Materia", command=agregar_materia, 
+                                font=("Calibri", 11, "bold"), bg="white")
+boton_agregar_materia.grid(row=0, column=3, padx=5)
+
+cargar_materias()
+
+materias_mmo_con_sufijo = [f"{materia} (MMO)" for materia in materias_mmo]
+materias_tem_con_sufijo = [f"{materia} (TEM)" for materia in materias_tem]
 
 # Botones
 from PIL import Image, ImageTk  # Pillow

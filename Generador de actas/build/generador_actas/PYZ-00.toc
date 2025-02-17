@@ -1,5 +1,5 @@
-('C:\\Users\\YamiYBM\\Desktop\\GIT\\GENERADR\\generador_actas\\Generador de '
- 'actas\\build\\generador_actas\\PYZ-00.pyz',
+('C:\\Users\\YamiYBM\\Desktop\\GIT\\portfolio\\Portfolio-Yamili-Yarbouh\\Generador '
+ 'de actas\\build\\generador_actas\\PYZ-00.pyz',
  [('PIL',
    'C:\\Users\\YamiYBM\\AppData\\Roaming\\Python\\Python312\\site-packages\\PIL\\__init__.py',
    'PYMODULE'),
