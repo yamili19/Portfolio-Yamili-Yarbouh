@@ -60,7 +60,7 @@ def cargar_materias():
     # Cargar materias MMO
     try:
         # Leer el archivo CSV y separar correctamente por comas
-        with open(ARCHIVO_MMO, "r", encoding="latin-1") as file:
+        with open(ARCHIVO_MMO, "r", encoding="utf-8-sig") as file:
             reader = csv.reader(file, delimiter=",")  # Indicamos que las materias están separadas por comas
             materias_mmo = [materia.strip() for row in reader for materia in row]  # Aplanamos la lista y limpiamos espacios
     except FileNotFoundError:
@@ -69,7 +69,7 @@ def cargar_materias():
     # Cargar materias TEM
     try:
         # Leer el archivo CSV y separar correctamente por comas
-        with open(ARCHIVO_TEM, "r", encoding="latin-1") as file:
+        with open(ARCHIVO_TEM, "r", encoding="utf-8-sig") as file:
             reader = csv.reader(file, delimiter=",")  # Indicamos que las materias están separadas por comas
             materias_tem = [materia.strip() for row in reader for materia in row]  # Aplanamos la lista y limpiamos espacios
     except FileNotFoundError:
@@ -80,7 +80,7 @@ cargar_materias()
 # Función para guardar las materias en archivos
 def guardar_materias(modalidad, materia):
     archivo = ARCHIVO_MMO if modalidad == "MMO" else ARCHIVO_TEM
-    with open(archivo, "a", encoding="utf-8") as f:
+    with open(archivo, "a", encoding="utf-8-sig") as f:
         f.write(f"{materia}\n")
 
 # Función para agregar materias
@@ -609,7 +609,7 @@ def registrar():
         # Completar las columnas dinámicas con valores vacíos
         for col in df.columns:
             if col not in nuevo_registro:
-                nuevo_registro[col] = pd.NA
+                nuevo_registro[col] = ""
 
         # Añadir el nuevo registro al DataFrame
         df = pd.concat([df, pd.DataFrame([nuevo_registro])], ignore_index=True)

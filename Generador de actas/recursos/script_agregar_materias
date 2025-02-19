@@ -1,0 +1,39 @@
+import pandas as pd
+import os
+
+# Configuración
+ARCHIVO_ENTRADA = "plan MMO.xlsx"
+HOJA_EXCEL = "Hoja1"
+COLUMNA_MATERIAS = "ESPACIO CURRICULAR 1"
+
+# Verificar archivo
+if not os.path.exists(ARCHIVO_ENTRADA):
+    print(f"❌ Error: Archivo '{ARCHIVO_ENTRADA}' no encontrado en:")
+    print(f"📍 Ruta actual: {os.getcwd()}")
+    exit()
+
+try:
+    # Leer archivo
+    if ARCHIVO_ENTRADA.endswith('.xlsx'):
+        df = pd.read_excel(ARCHIVO_ENTRADA, sheet_name=HOJA_EXCEL)
+    elif ARCHIVO_ENTRADA.endswith('.csv'):
+        df = pd.read_csv(ARCHIVO_ENTRADA)
+    
+    # Verificar columna
+    if COLUMNA_MATERIAS not in df.columns:
+        print(f"❌ Error: Columna '{COLUMNA_MATERIAS}' no existe")
+        print("🔍 Columnas disponibles:", list(df.columns))
+        exit()
+
+    # Procesar materias
+    materias = df[COLUMNA_MATERIAS].astype(str).str.strip().dropna().unique()
+    
+    # Escribir archivo con codificación correcta
+    with open('materias_mmo.csv', 'w', encoding='utf-8-sig') as f:  # Cambio clave aquí
+        f.write(",".join(materias))
+    
+    print("✅ Archivo creado correctamente con codificación adecuada")
+    print(f"📚 Total materias: {len(materias)}")
+
+except Exception as e:
+    print(f"🚨 Error: {str(e)}")
