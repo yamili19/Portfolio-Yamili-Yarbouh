@@ -1,9 +1,22 @@
 import pandas as pd
 import os
 
+import os
+
+# Mostrar la ruta absoluta del archivo
+ruta_archivo = os.path.abspath("PLAN TEM.xlsx")
+print(f"📂 Ruta real del archivo: {ruta_archivo}")
+
+# Mostrar si existe o no
+if os.path.exists(ruta_archivo):
+    print("✅ El archivo existe y se usará este.")
+else:
+    print("❌ ERROR: El archivo NO existe en la ruta indicada.")
+
+
 # Configuración
-ARCHIVO_ENTRADA = "plan MMO.xlsx"
-HOJA_EXCEL = "Hoja1"
+ARCHIVO_ENTRADA = ruta_archivo
+HOJA_EXCEL = "ACTAS TEM"
 COLUMNA_MATERIAS = "ESPACIO CURRICULAR 1"
 
 # Verificar archivo
@@ -15,7 +28,9 @@ if not os.path.exists(ARCHIVO_ENTRADA):
 try:
     # Leer archivo
     if ARCHIVO_ENTRADA.endswith('.xlsx'):
-        df = pd.read_excel(ARCHIVO_ENTRADA, sheet_name=HOJA_EXCEL)
+        df = pd.read_excel(ruta_archivo, sheet_name=" ACTAS TEM", engine="openpyxl")
+        print(df.head())  # Mostrar primeras filas para confirmar
+
     elif ARCHIVO_ENTRADA.endswith('.csv'):
         df = pd.read_csv(ARCHIVO_ENTRADA)
     
@@ -29,8 +44,9 @@ try:
     materias = df[COLUMNA_MATERIAS].astype(str).str.strip().dropna().unique()
     
     # Escribir archivo con codificación correcta
-    with open('materias_mmo.csv', 'w', encoding='utf-8-sig') as f:  # Cambio clave aquí
+    with open('materias_tem.csv', 'w', encoding='utf-8-sig') as f:  # Cambio clave aquí
         f.write(",".join(materias))
+    print(materias)
     
     print("✅ Archivo creado correctamente con codificación adecuada")
     print(f"📚 Total materias: {len(materias)}")
