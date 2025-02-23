@@ -1,12 +1,12 @@
 import { useState } from "react";
-import uploadService from "./uploadService"; // Asegúrate de que la ruta sea correcta
+import uploadService from "./uploadService";
 import "./DragAndDrop.css";
-import Modal from "../Modal/Modal"; // Importa tu componente modal
+import Modal from "../Modal/Modal";
 
-const DragAndDrop = () => {
+const DragAndDrop = ({ onFileUpload }) => { // Recibe la prop onFileUpload
   const [file, setFile] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false); // Estado para controlar la visibilidad del modal
-  const [modalMessage, setModalMessage] = useState(null); // Estado para el mensaje del modal
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState(null);
 
   const handleDrop = (event) => {
     event.preventDefault();
@@ -16,35 +16,30 @@ const DragAndDrop = () => {
 
   const handleUpload = async () => {
     if (!file) {
-      setModalMessage({
-        text: "Debe seleccionar un archivo",
-        type: "error", // Establecer el tipo de mensaje (error)
-      });
-      setModalVisible(true); // Mostrar modal de error
+      setModalMessage({ text: "Debe seleccionar un archivo", type: "error" });
+      setModalVisible(true);
       return;
     }
 
     try {
       const formData = new FormData();
-      formData.append("file", file); // Aquí agregamos el archivo
+      formData.append("file", file);
 
-      await uploadService.uploadFile(file); // Usamos el método adecuado en tu servicio para enviar el archivo completo
-      setModalMessage({
-        text: "Archivo enviado correctamente",
-        type: "success", // Establecer el tipo de mensaje (éxito)
-      });
-      setModalVisible(true); // Mostrar modal de éxito
+      await uploadService.uploadFile(file);
+
+      setModalMessage({ text: "Archivo enviado correctamente", type: "success" });
+      setModalVisible(true);
+
+      // Notificar que el archivo fue subido con éxito
+      onFileUpload(true);
     } catch (error) {
       console.error("Error al enviar el archivo:", error);
-      setModalMessage({
-        text: "Error al enviar el archivo",
-        type: "error", // Establecer el tipo de mensaje (error)
-      });
-      setModalVisible(true); // Mostrar modal de error
+      setModalMessage({ text: "Error al enviar el archivo", type: "error" });
+      setModalVisible(true);
     }
   };
 
-  const closeModal = () => setModalVisible(false); // Función para cerrar el modal
+  const closeModal = () => setModalVisible(false);
 
   return (
     <div>
@@ -53,7 +48,6 @@ const DragAndDrop = () => {
       </div>
       <button className="upload-button" onClick={handleUpload}>Subir Archivo</button>
 
-      {/* Mostrar el modal si está visible */}
       {modalVisible && <Modal message={modalMessage} onClose={closeModal} />}
     </div>
   );
