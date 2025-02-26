@@ -104,7 +104,6 @@ class TablaPermisos(tk.Toplevel):
             
         item = self.tree.item(selected[0])
         valores = item['values']
-        curso_actual = valores[4]  # Usar índice 8 para curso original
         
         # Ventana de modificación
         edit_win = tk.Toplevel(self)
@@ -113,49 +112,67 @@ class TablaPermisos(tk.Toplevel):
         # Variables del formulario
         dni = tk.StringVar(value=valores[0])
         nombre = tk.StringVar(value=valores[1])
-        materia = tk.StringVar(value=valores[2])
+        materia = tk.StringVar(value=f"{valores[7]} - {valores[2]}")  # ID - Nombre
         modalidad = tk.StringVar(value=valores[3])
         curso = tk.StringVar(value=valores[4])
         condicion = tk.StringVar(value=valores[5])
-        
+
+        # Función para actualizar materias según especialidad
+        def actualizar_materias_combo(event=None):
+            cursor.execute("SELECT id, nombre FROM materia WHERE modalidad = %s", 
+                        (modalidad.get(),))
+            materias = [f"{row[0]} - {row[1]}" for row in cursor.fetchall()]
+            combo_materia['values'] = materias
+
         # Campos editables
-        ttk.Label(edit_win, text="DNI (no editable):").grid(row=0, column=0, padx=5, pady=5)
+        ttk.Label(edit_win, text="DNI:").grid(row=0, column=0, padx=5, pady=5)
         ttk.Entry(edit_win, textvariable=dni, state='readonly').grid(row=0, column=1, padx=5, pady=5)
         
         ttk.Label(edit_win, text="Nombre:").grid(row=1, column=0, padx=5, pady=5)
         ttk.Entry(edit_win, textvariable=nombre).grid(row=1, column=1, padx=5, pady=5)
         
-        ttk.Label(edit_win, text="Curso:").grid(row=2, column=0, padx=5, pady=5)
-        #Modificar esta línea:
-        ttk.Combobox(edit_win, textvariable=curso, 
-                   values=self.master.generar_cursos()).grid(row=2, column=1, padx=5, pady=5)
+        # Especialidad
+        ttk.Label(edit_win, text="Especialidad:").grid(row=2, column=0, padx=5, pady=5)
+        combo_modalidad = ttk.Combobox(edit_win, textvariable=modalidad, 
+                                    values=["MMO", "TEM", "POLIMODAL"], state='readonly')
+        combo_modalidad.grid(row=2, column=1, padx=5, pady=5)
+        combo_modalidad.bind("<<ComboboxSelected>>", actualizar_materias_combo)
         
-        ttk.Label(edit_win, text="Condición:").grid(row=3, column=0, padx=5, pady=5)
-        ttk.Combobox(edit_win, textvariable=condicion, values=["LIBRE", "REGULAR"]).grid(row=3, column=1, padx=5, pady=5)
-
-        ttk.Label(self, text="Especialidad:").grid(row=4, column=0, padx=5, pady=5, sticky="w")
-
-        self.combo_modalidad = ttk.Combobox(self, textvariable=modalidad, 
-                                            values=["MMO", "TEM", "POLIMODAL"], state='readonly')
-        self.combo_modalidad.grid(row=4, column=1, padx=5, pady=5)
-
-        self.combo_modalidad.bind("<<ComboboxSelected>>", self.master.actualizar_materias)
-
-
-        ttk.Label(edit_win, text="Materia:").grid(row=5, column=0, padx=5, pady=5)
-        self.materia = ttk.Combobox(edit_win, textvariable=materia).grid(row=5, column=1, padx=5, pady=5)
+        # Materia (dependiente de especialidad)
+        ttk.Label(edit_win, text="Materia:").grid(row=3, column=0, padx=5, pady=5)
+        combo_materia = ttk.Combobox(edit_win, textvariable=materia)
+        combo_materia.grid(row=3, column=1, padx=5, pady=5)
+        actualizar_materias_combo()  # Cargar inicialmente
         
+        # Curso
+        ttk.Label(edit_win, text="Curso:").grid(row=4, column=0, padx=5, pady=5)
+        combo_curso = ttk.Combobox(edit_win, textvariable=curso, 
+                                values=self.master.generar_cursos())
+        combo_curso.grid(row=4, column=1, padx=5, pady=5)
+        
+        # Condición
+        ttk.Label(edit_win, text="Condición:").grid(row=5, column=0, padx=5, pady=5)
+        combo_condicion = ttk.Combobox(edit_win, textvariable=condicion, 
+                                    values=["LIBRE", "REGULAR"])
+        combo_condicion.grid(row=5, column=1, padx=5, pady=5)
+
         def guardar_cambios():
             try:
+                # Extraer ID de materia
+                materia_id = materia.get().split(" - ")[0]
                 
                 cursor.execute('''
                     UPDATE detalle_permiso 
-                    SET condicion = %s, materia = %s
+                    SET condicion = %s, 
+                        materia = %s,
                         curso = %s
                     WHERE id_permiso = %s 
                     AND materia = %s 
-                ''', (condicion.get(), materia.get(), curso.get(), valores[6], valores[7] 
-                        )) 
+                ''', (condicion.get(), 
+                    materia_id,
+                    curso.get(),
+                    valores[6],  # id_permiso
+                    valores[7])) # materia_id original
                 
                 conexion.commit()
                 self.cargar_datos()
