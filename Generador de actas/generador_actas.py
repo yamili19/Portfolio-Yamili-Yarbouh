@@ -47,13 +47,47 @@ class TablaPermisos(tk.Toplevel):
         super().__init__(parent)
         self.master = parent
         self.title("Registro de Permisos de Examen")
-        self.geometry("1200x600")        
-
+        self.geometry("1200x600")
+        # Frame para los filtros
+        frame_filtros = tk.Frame(self)
+        frame_filtros.pack(pady=10, fill='x')
+        
+        # Filtro por DNI
+        tk.Label(frame_filtros, text="Filtrar por DNI:").pack(side='left', padx=5)
+        self.filtro_dni = tk.StringVar()
+        tk.Entry(frame_filtros, textvariable=self.filtro_dni, width=15).pack(side='left', padx=5)
+        
+        # Filtro por Nombre
+        tk.Label(frame_filtros, text="Filtrar por Nombre:").pack(side='left', padx=5)
+        self.filtro_nombre = tk.StringVar()
+        tk.Entry(frame_filtros, textvariable=self.filtro_nombre, width=20).pack(side='left', padx=5)
+        
+        # Filtro por Materia
+        tk.Label(frame_filtros, text="Filtrar por Materia:").pack(side='left', padx=5)
+        self.filtro_materia = tk.StringVar()
+        self.combo_materias = ttk.Combobox(frame_filtros, 
+                                         textvariable=self.filtro_materia,
+                                         width=25)
+        self.combo_materias.pack(side='left', padx=5)
+        
+        # Botón de búsqueda
+        btn_buscar = tk.Button(frame_filtros, text="Buscar", command=self.cargar_datos)
+        btn_buscar.pack(side='left', padx=5)
+        
+        # Botón limpiar filtros
+        btn_limpiar = tk.Button(frame_filtros, text="Limpiar", command=self.limpiar_filtros)
+        btn_limpiar.pack(side='left', padx=5)
+        
+        # Cargar materias en el combo
+        self.cargar_materias()
+        
+        # Configurar el Treeview
         self.tree = ttk.Treeview(
-        self, 
-        columns=('DNI', 'Nombre', 'Materia', 'Especialidad', 'Curso', 'Condición', 
-                'id_permiso', 'materia_id', 'curso_original'),  # Cambiar nombre de columna
-        show='headings')
+            self, 
+            columns=('DNI', 'Nombre', 'Materia', 'Especialidad', 'Curso', 'Condición', 
+                    'id_permiso', 'materia_id', 'curso_original'),
+            show='headings'
+        )
 
         # Configurar encabezados visibles
         self.tree.heading('DNI', text='DNI')
@@ -82,6 +116,18 @@ class TablaPermisos(tk.Toplevel):
         self.tree.bind("<Button-3>", self.mostrar_menu)       
 
         self.cargar_datos() 
+
+    def cargar_materias(self):
+        cursor.execute("SELECT DISTINCT nombre FROM materia")
+        materias = [row[0] for row in cursor.fetchall()]
+        self.combo_materias['values'] = materias
+
+    def limpiar_filtros(self):
+        self.filtro_dni.set('')
+        self.filtro_nombre.set('')
+        self.filtro_materia.set('')
+        self.cargar_datos()
+
 
     def mostrar_menu(self, event):
         item = self.tree.identify_row(event.y)
@@ -142,7 +188,6 @@ class TablaPermisos(tk.Toplevel):
         # Campos editables
         ttk.Label(edit_win, text="DNI:").grid(row=0, column=0, padx=5, pady=5)
         ttk.Entry(edit_win, textvariable=dni, state='readonly').grid(row=0, column=1, padx=5, pady=5)
-        
         ttk.Label(edit_win, text="Nombre:").grid(row=1, column=0, padx=5, pady=5)
         ttk.Entry(edit_win, textvariable=nombre).grid(row=1, column=1, padx=5, pady=5)
         
@@ -189,7 +234,8 @@ class TablaPermisos(tk.Toplevel):
                     valores[6],  # id_permiso
                     valores[7])) # materia_id original
                 
-                conexion.commit()
+                conexion.commit()               
+
                 self.cargar_datos()
                 edit_win.destroy()
                 messagebox.showinfo("Éxito", "Registro actualizado correctamente")
@@ -202,7 +248,8 @@ class TablaPermisos(tk.Toplevel):
 
     def cargar_datos(self):
         try:
-            cursor.execute('''
+            # Construir consulta con filtros
+            query = '''
                 SELECT 
                     a.dni,
                     a.nombre,
@@ -210,15 +257,34 @@ class TablaPermisos(tk.Toplevel):
                     m.modalidad,
                     dp.curso,
                     dp.condicion,
-                    p.nro,          # id_permiso
-                    m.id,            # materia_id
-                    dp.curso         # curso (original)
+                    p.nro,
+                    m.id,
+                    dp.curso
                 FROM alumno a
                 JOIN permiso p ON a.dni = p.dni
                 JOIN detalle_permiso dp ON p.nro = dp.id_permiso
                 JOIN materia m ON dp.materia = m.id
-                ORDER BY a.nombre
-            ''')
+                WHERE 1=1
+            '''
+            
+            params = []
+            
+            # Aplicar filtros
+            if self.filtro_dni.get():
+                query += " AND a.dni LIKE %s"
+                params.append(f"%{self.filtro_dni.get()}%")
+            
+            if self.filtro_nombre.get():
+                query += " AND a.nombre LIKE %s"
+                params.append(f"%{self.filtro_nombre.get().upper()}%")
+            
+            if self.filtro_materia.get():
+                query += " AND m.nombre = %s"
+                params.append(self.filtro_materia.get())
+            
+            query += " ORDER BY a.nombre"
+            
+            cursor.execute(query, params)
             
             # Limpiar tabla existente
             for item in self.tree.get_children():
@@ -314,14 +380,12 @@ class RegistroMateriasApp(tk.Tk):
             datos = cursor.fetchall()
 
             if not datos:
-                print("No hay datos para el alumno.")
                 return
 
             doc = Document(ruta_permiso)
 
             # Extraer datos del primer registro
             nombre_alumno, dni, nro_permiso, plan_estudio, materia, curso = datos[0]
-            print(nombre_alumno, dni, nro_permiso, plan_estudio, materia, curso)
 
             # Reemplazar valores en el documento
             # Llenar encabezados del acta
@@ -388,12 +452,10 @@ class RegistroMateriasApp(tk.Tk):
     def generar_permiso(self):
         try:
             dni_list = self.obtener_alumnos()
-            print(dni_list)
             for dni in dni_list:
                 self.generar_permiso_examen(dni)
             messagebox.showinfo("Éxito", "Permisos generados exitosamente.")
         except Exception as e:
-            print(e)
             messagebox.showerror("Error", e)
 
     def generar_actas_examen(self, modalidad):
@@ -419,7 +481,6 @@ class RegistroMateriasApp(tk.Tk):
                 if clave not in grupos:
                     grupos[clave] = []
                 grupos[clave].append(registro)
-            print(grupos)
             # Procesar cada grupo
             for (materia, curso, condicion), alumnos in grupos.items():
                 doc = Document(ruta_acta)
@@ -473,7 +534,7 @@ class RegistroMateriasApp(tk.Tk):
                 # Guardar el documento
                 doc.save(ruta_archivo)
                 
-            messagebox.showinfo("Éxito", "Actas generadas correctamente")
+            messagebox.showinfo("Éxito", f"Actas {str(modalidad)} generadas correctamente")
         
         except Exception as e:
             messagebox.showerror("Error", f"Error al generar actas: {str(e)}")
@@ -602,8 +663,9 @@ class RegistroMateriasApp(tk.Tk):
             dni = self.dni.get()
             nombre = self.nombre.get()
             curso = self.curso.get()
+            especialidad = self.curso.get()
         
-            cursor.execute("INSERT IGNORE INTO alumno VALUES (%s, %s)", (dni, nombre.upper()))
+            cursor.execute("INSERT IGNORE INTO alumno VALUES (%s, %s, %s)", (dni, nombre.upper(), especialidad.upper()))
         
             # Crear permiso
             cursor.execute("INSERT INTO permiso (dni) VALUES (%s)", (dni,))
@@ -613,7 +675,6 @@ class RegistroMateriasApp(tk.Tk):
             for materia_id, condicion in self.materias_seleccionadas:
                 cursor.execute("INSERT INTO detalle_permiso VALUES (%s, %s, %s, %s)", 
                          (id_permiso, int(materia_id), condicion, curso))
-        
             conexion.commit()
         
             # Limpiar formulario
