@@ -9,10 +9,8 @@ import os
 from docx.shared import Pt
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-import pymysql
 from datetime import datetime
 from docx.shared import Pt
-from io import BytesIO
 from docx import Document
 # Función para obtener la ruta del recurso
 def obtener_ruta_recurso(relativa):
@@ -36,6 +34,97 @@ cursor = conexion.cursor()
 ruta_permiso = obtener_ruta_recurso(r"recursos\PERMISOS EXAMEN - 2023.docx")
 
 ruta_acta = obtener_ruta_recurso(r"recursos\ACTA DE EXAMEN.docx")
+
+class MainApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Sistema de Gestión de Exámenes")
+        self.geometry("400x300")
+        
+        # Barra de menú principal
+        menubar = tk.Menu(self)
+        
+        # Menú Archivo
+        file_menu = tk.Menu(menubar, tearoff=0)
+        file_menu.add_command(label="Salir", command=self.quit)
+        menubar.add_cascade(label="Archivo", menu=file_menu)
+        
+        # Menú Registros
+        registro_menu = tk.Menu(menubar, tearoff=0)
+        registro_menu.add_command(label="Nuevo Registro", command=self.abrir_registro_materias)
+        registro_menu.add_command(label="Ver Permisos", command=self.abrir_tabla_permisos)
+        menubar.add_cascade(label="Registros", menu=registro_menu)
+        
+        # Menú Editar
+        editar_menu = tk.Menu(menubar, tearoff=0)
+        editar_menu.add_command(label="Editar Alumno", command=self.abrir_editar_alumno)
+        menubar.add_cascade(label="Alumno", menu=editar_menu)
+        
+        self.config(menu=menubar)
+    
+    def abrir_registro_materias(self):
+        RegistroMateriasApp(self)
+    
+    def abrir_tabla_permisos(self):
+        TablaPermisos(self)
+    
+    def abrir_editar_alumno(self):
+        EditarAlumnoWindow(self)
+
+class EditarAlumnoWindow(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Editar Alumno")
+        self.geometry("400x300")
+        
+        self.dni_busqueda = tk.StringVar()
+        self.nombre = tk.StringVar()
+        self.modalidad = tk.StringVar()
+        
+        tk.Label(self, text="DNI del Alumno:").pack(pady=5)
+        tk.Entry(self, textvariable=self.dni_busqueda).pack(pady=5)
+        tk.Button(self, text="Buscar", command=self.buscar_alumno).pack(pady=5)
+        
+        tk.Label(self, text="Nombre:").pack(pady=5)
+        tk.Entry(self, textvariable=self.nombre).pack(pady=5)
+        
+        tk.Label(self, text="Modalidad:").pack(pady=5)
+        self.combo_modalidad = ttk.Combobox(self, textvariable=self.modalidad, 
+                                          values=["MMO", "TEM", "POLIMODAL"])
+        self.combo_modalidad.pack(pady=5)
+        
+        tk.Button(self, text="Guardar Cambios", command=self.guardar_cambios).pack(pady=10)
+    
+    def buscar_alumno(self):
+        dni = self.dni_busqueda.get()
+        cursor.execute("SELECT nombre, modalidad FROM alumno WHERE dni = %s", (dni,))
+        alumno = cursor.fetchone()
+        if alumno:
+            self.nombre.set(alumno[0])
+            self.modalidad.set(alumno[1])
+        else:
+            messagebox.showerror("Error", "Alumno no encontrado")
+    
+    def guardar_cambios(self):
+        dni = self.dni_busqueda.get()
+        nuevo_nombre = self.nombre.get().upper()
+        nueva_modalidad = self.modalidad.get()
+        
+        try:
+            cursor.execute("""
+                UPDATE alumno 
+                SET nombre = %s, 
+                    modalidad = %s 
+                WHERE dni = %s
+            """, (nuevo_nombre, nueva_modalidad, dni))
+            
+            conexion.commit()
+            messagebox.showinfo("Éxito", "Datos actualizados correctamente")
+            self.destroy()
+            
+        except mysql.connector.Error as err:
+            conexion.rollback()
+            messagebox.showerror("Error", f"Error al actualizar: {err}")
 
 
 class TablaPermisos(tk.Toplevel):
@@ -140,12 +229,21 @@ class TablaPermisos(tk.Toplevel):
         valores = item['values']
         
         try:
+            # Eliminar el detalle_permiso
             cursor.execute('''
                 DELETE FROM detalle_permiso
                 WHERE id_permiso = %s 
                 AND materia = %s 
-            ''', (valores[6], valores[7]))  # Índices correctos
-            
+            ''', (valores[6], valores[7]))
+
+            # Verificar si quedan otros detalles para este permiso
+            cursor.execute("SELECT COUNT(*) FROM detalle_permiso WHERE id_permiso = %s", (valores[6],))
+            count = cursor.fetchone()[0]
+
+            # Si no hay más detalles, eliminar el permiso
+            if count == 0:
+                cursor.execute("DELETE FROM permiso WHERE nro = %s", (valores[6],))
+
             conexion.commit()
             self.cargar_datos()
             messagebox.showinfo("Éxito", "Registro eliminado correctamente")
@@ -167,8 +265,6 @@ class TablaPermisos(tk.Toplevel):
         edit_win.title("Modificar Registro")
         
         # Variables del formulario
-        dni = tk.StringVar(value=valores[0])
-        nombre = tk.StringVar(value=valores[1])
         materia = tk.StringVar(value=f"{valores[7]} - {valores[2]}")  # ID - Nombre
         modalidad = tk.StringVar(value=valores[3])
         curso = tk.StringVar(value=valores[4])
@@ -295,9 +391,9 @@ class TablaPermisos(tk.Toplevel):
         except mysql.connector.Error as err:
             messagebox.showerror("Error", f"Error al cargar datos:\n{err}")
 
-class RegistroMateriasApp(tk.Tk):
-    def __init__(self):
-        super().__init__()
+class RegistroMateriasApp(tk.Toplevel):
+    def __init__(self, parent):  # Agregar parámetro parent
+        super().__init__(parent)
         self.title("Registro de Materias")
         self.geometry("1200x1200")
         
@@ -551,7 +647,6 @@ class RegistroMateriasApp(tk.Tk):
         # Valida que sólo contenga números
         return new_value.isdigit() or new_value == ""
 
-    
         
     def crear_widgets(self):
         # Campos para datos del alumno
@@ -687,7 +782,7 @@ class RegistroMateriasApp(tk.Tk):
             dni = self.dni.get()
             nombre = self.nombre.get()
             curso = self.curso.get()
-            especialidad = self.curso.get()
+            especialidad = self.especialidad.get()
         
             cursor.execute("INSERT IGNORE INTO alumno VALUES (%s, %s, %s)", (dni, nombre.upper(), especialidad.upper()))
         
@@ -723,6 +818,6 @@ class RegistroMateriasApp(tk.Tk):
             messagebox.showerror("Error", f"Error de base de datos:\n{err}") 
 
 if __name__ == "__main__":
-    app = RegistroMateriasApp()
+    app = MainApp()
     app.mainloop()
     conexion.close()
