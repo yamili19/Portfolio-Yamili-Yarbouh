@@ -3,10 +3,6 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
 import pandas as pd
-from openpyxl import load_workbook, Workbook
-from openpyxl.worksheet.protection import SheetProtection
-from openpyxl.workbook.protection import WorkbookProtection
-from docx.opc.exceptions import PackageNotFoundError
 import sys
 import re
 import os
@@ -187,16 +183,18 @@ class TablaPermisos(tk.Toplevel):
 
         # Campos editables
         ttk.Label(edit_win, text="DNI:").grid(row=0, column=0, padx=5, pady=5)
-        ttk.Entry(edit_win, textvariable=dni, state='readonly').grid(row=0, column=1, padx=5, pady=5)
+        ttk.Label(edit_win, text=valores[0]).grid(row=0, column=1, padx=5, pady=5)  # Display DNI as a label
         ttk.Label(edit_win, text="Nombre:").grid(row=1, column=0, padx=5, pady=5)
-        ttk.Entry(edit_win, textvariable=nombre).grid(row=1, column=1, padx=5, pady=5)
+        ttk.Label(edit_win, text=valores[1]).grid(row=1, column=1, padx=5, pady=5) # Display Nombre as a label
         
-        # Especialidad
+        #Especialidad
         ttk.Label(edit_win, text="Especialidad:").grid(row=2, column=0, padx=5, pady=5)
-        combo_modalidad = ttk.Combobox(edit_win, textvariable=modalidad, 
-                                    values=["MMO", "TEM", "POLIMODAL"], state='readonly')
-        combo_modalidad.grid(row=2, column=1, padx=5, pady=5)
-        combo_modalidad.bind("<<ComboboxSelected>>", actualizar_materias_combo)
+        ttk.Label(edit_win, text=valores[3]).grid(row=2, column=1, padx=5, pady=5) # Display Nombre as a label
+
+        #combo_modalidad = ttk.Combobox(edit_win, textvariable=modalidad, 
+        #                           values=["MMO", "TEM", "POLIMODAL"], state='readonly')
+        #combo_modalidad.grid(row=2, column=1, padx=5, pady=5)
+        #combo_modalidad.bind("<<ComboboxSelected>>", actualizar_materias_combo)
         
         # Materia (dependiente de especialidad)
         ttk.Label(edit_win, text="Materia:").grid(row=3, column=0, padx=5, pady=5)
@@ -301,7 +299,7 @@ class RegistroMateriasApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Registro de Materias")
-        self.geometry("500x600")
+        self.geometry("1200x1200")
         
         self.dni = tk.StringVar()
         self.nombre = tk.StringVar()
@@ -587,9 +585,14 @@ class RegistroMateriasApp(tk.Tk):
         self.combo_condicion = ttk.Combobox(self, textvariable=self.condicion, 
                                          values=["LIBRE", "REGULAR"])
         self.combo_condicion.pack(pady=5)
-        
-        # Botón para agregar materia
-        tk.Button(self, text="Agregar Materia", command=self.agregar_materia).pack(pady=10)
+
+        # Botones en un Frame para alinearlos horizontalmente
+        frame_botones_materias = tk.Frame(self)
+        frame_botones_materias.pack(pady=10)
+
+        tk.Button(frame_botones_materias, text="Agregar Materia", command=self.agregar_materia).pack(side="left", padx=5)
+        tk.Button(frame_botones_materias, text="Eliminar Materia Seleccionada", command=self.eliminar_materia).pack(side="left", padx=5)
+
         
         # Listbox para materias agregadas
         self.listbox = tk.Listbox(self, width=50, height=10)
@@ -597,6 +600,15 @@ class RegistroMateriasApp(tk.Tk):
         
         # Botón para guardar
         tk.Button(self, text="Guardar Registro", command=self.guardar_registro).pack(pady=10)
+
+    def eliminar_materia(self):
+        selected_index = self.listbox.curselection()
+        if selected_index:
+            index = selected_index[0]
+            del self.materias_seleccionadas[index]
+            self.listbox.delete(index)
+        else:
+            messagebox.showinfo("Información", "Seleccione una materia para eliminar.")
     
     def generar_cursos(self):
         """Genera todas las combinaciones de año y división"""
@@ -621,6 +633,10 @@ class RegistroMateriasApp(tk.Tk):
     
     def validar_campos(self):
         errores = []
+
+        self.cursor = conexion.cursor()
+        self.cursor.execute("SELECT modalidad FROM alumno WHERE dni = %s", (self.dni.get(),))
+        resultado = self.cursor.fetchone()
         
         # Validar campos básicos
         if not self.nombre.get().strip():
@@ -647,6 +663,14 @@ class RegistroMateriasApp(tk.Tk):
             messagebox.showerror("Error de validación", mensaje)
             return False
         
+        if not resultado:
+            pass
+        else:
+            modalidad_bd = resultado[0]
+            if modalidad_bd != self.especialidad.get():
+                messagebox.showerror("Error", "La modalidad seleccionada no es la misma que que tiene registrada el alumno.")
+                return False
+        
         return True
     
     def guardar_registro(self):
@@ -667,9 +691,15 @@ class RegistroMateriasApp(tk.Tk):
         
             cursor.execute("INSERT IGNORE INTO alumno VALUES (%s, %s, %s)", (dni, nombre.upper(), especialidad.upper()))
         
-            # Crear permiso
-            cursor.execute("INSERT INTO permiso (dni) VALUES (%s)", (dni,))
-            id_permiso = cursor.lastrowid
+            # 2. Obtener o crear permiso
+            cursor.execute("SELECT nro FROM permiso WHERE dni = %s", (dni,))
+            permiso_existente = cursor.fetchone()
+
+            if permiso_existente:
+                id_permiso = permiso_existente[0]
+            else:
+                cursor.execute("INSERT INTO permiso (dni) VALUES (%s)", (dni,))
+                id_permiso = cursor.lastrowid
         
             # Guardar materias
             for materia_id, condicion in self.materias_seleccionadas:
