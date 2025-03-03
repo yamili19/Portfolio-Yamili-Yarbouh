@@ -1,32 +1,53 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk
 from .editar_alumno import EditarAlumnoWindow
 from .registro_materias import RegistroMateriasApp
 from .tabla_permisos import TablaPermisos
+from .generar_actas import generar_actas
+from .generar_permisos import generar_permiso
 
 class MainApp(tk.Tk):
     def __init__(self, conexion):
         super().__init__()
         self.conexion = conexion
         self.title("Sistema de Gestión de Exámenes")
-        self.geometry("400x300")
+        self.geometry("400x400")  # Aumentamos el tamaño para mejor visualización
+        self.config(bg="#f0f0f0")
         
-        menubar = tk.Menu(self)
+        # Contenedor principal centrado
+        main_frame = tk.Frame(self, bg="#f0f0f0")
+        main_frame.place(relx=0.5, rely=0.5, anchor="center")
         
-        file_menu = tk.Menu(menubar, tearoff=0)
-        file_menu.add_command(label="Salir", command=self.quit)
-        menubar.add_cascade(label="Archivo", menu=file_menu)
+        # Estilo para los botones del menú
+        style = ttk.Style()
+        style.configure("Menu.TButton", 
+                       font=("Arial", 12), 
+                       padding=10, 
+                       width=20,
+                       foreground="#333333")
         
-        registro_menu = tk.Menu(menubar, tearoff=0)
-        registro_menu.add_command(label="Nuevo Registro", command=self.abrir_registro_materias)
-        registro_menu.add_command(label="Ver Permisos", command=self.abrir_tabla_permisos)
-        menubar.add_cascade(label="Registros", menu=registro_menu)
+        # Botones (versión corregida)
+        botones = [
+            ("Nuevo Registro", self.abrir_registro_materias),
+            ("Ver Permisos", self.abrir_tabla_permisos),
+            ("Editar Alumno", self.abrir_editar_alumno),
+            ("Generar Permisos", lambda: generar_permiso(self.conexion)), # Usando lambda
+            ("Generar Actas", lambda: generar_actas(self.conexion)), # Usando lambda
+            ("Salir", self.quit)
+        ]
         
-        editar_menu = tk.Menu(menubar, tearoff=0)
-        editar_menu.add_command(label="Editar Alumno", command=self.abrir_editar_alumno)
-        menubar.add_cascade(label="Alumno", menu=editar_menu)
+        # Crear botones dinámicamente
+        for texto, comando in botones:
+            ttk.Button(
+                main_frame, 
+                text=texto, 
+                style="Menu.TButton",
+                command=comando  # Sin ejecución inmediata
+            ).pack(pady=5, fill=tk.X)
         
-        self.config(menu=menubar)
+        # Configuración responsiva
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
     
     def generar_cursos(self):
         cursos = []

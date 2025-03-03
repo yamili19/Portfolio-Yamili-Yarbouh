@@ -2,22 +2,7 @@ import mysql.connector
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
-import pandas as pd
-import sys
-import re
-import os
-from docx.shared import Pt
-from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
-from datetime import datetime
-from docx.shared import Pt
-from docx import Document
-from .utils import obtener_ruta_recurso
 from .tabla_permisos import TablaPermisos
-
-ruta_permiso = obtener_ruta_recurso(r"recursos\PERMISOS EXAMEN - 2023.docx")
-ruta_acta = obtener_ruta_recurso(r"recursos\ACTA DE EXAMEN.docx")
-
 
 
 class RegistroMateriasApp(tk.Toplevel):
@@ -37,239 +22,6 @@ class RegistroMateriasApp(tk.Toplevel):
         
         self.crear_widgets()
 
-        # Botón para mostrar tabla
-        tk.Button(self, text="Ver Permisos Registrados", command=self.mostrar_tabla).pack(pady=10)
-        # Botones en un Frame para alinearlos horizontalmente
-        frame_botones = tk.Frame(self)
-        frame_botones.pack(pady=10)
-
-        tk.Button(frame_botones, text="Generar Permisos", command=self.generar_permiso).pack(side="left", padx=5)
-        tk.Button(frame_botones, text="Generar Actas", command=self.generar_actas).pack(side="left", padx=5)
-    
-    def obtener_alumnos(self):
-        cursor = self.conexion.cursor()
-        # Consulta para obtener los DNI de los permisos
-        query = "SELECT DISTINCT dni FROM permiso"
-        cursor.execute(query)
-
-        # Obtener los resultados en una lista
-        dni_list = [row[0] for row in cursor.fetchall()]
-        return dni_list
-
-    def aplicar_estilo_encabezado(self, paragraph, texto, texto1, fuente="Calibri", tamaño=11, negrita=False):
-        """
-        Aplica el estilo Calibri de tamaño 11 solo a los encabezados, sin alterar el formato.
-        """
-        # Reemplazamos el texto sin cambiar el formato
-        for run in paragraph.runs:
-            if texto in run.text:  # Buscar el texto a reemplazar
-                run.text = run.text.replace(run.text, texto1)
-                run.font.name = fuente
-                run.font.size = Pt(tamaño)
-                run.font.bold = negrita
-
-    def aplicar_estilo_personalizado_celda(self, celda, texto, fuente="Arial", tamaño=11, negrita=False):
-        """
-        Escribe texto en un párrafo dentro de una celda con estilo personalizado.
-        """
-        # Aseguramos que estamos trabajando con un párrafo en la celda
-        p = celda.paragraphs[0]  # Primer párrafo en la celda
-        p.clear()  # Limpiar el contenido previo
-        run = p.add_run(texto)  # Agregar texto al párrafo
-        run.font.name = fuente  # Tipo de letra
-        run.font.size = Pt(tamaño)  # Tamaño de letra
-        run.bold = negrita  # Negrita
-
-        # Configuración explícita para garantizar el tipo de letra
-        rPr = run._element.get_or_add_rPr()
-        rFonts = OxmlElement('w:rFonts')
-        rFonts.set(qn('w:ascii'), fuente)
-        rFonts.set(qn('w:hAnsi'), fuente)
-        rFonts.set(qn('w:eastAsia'), fuente)
-        rFonts.set(qn('w:cs'), fuente)
-        rPr.append(rFonts)
-
-    
-    def generar_permiso_examen(self, id_alumno):
-            cursor = self.conexion.cursor()
-            # Obtener datos del alumno
-            cursor.execute("""
-                SELECT a.nombre, a.dni, p.nro, m.modalidad, m.nombre, dp.curso 
-                FROM alumno a
-                JOIN permiso p ON a.dni = p.dni
-                JOIN detalle_permiso dp ON p.nro = dp.id_permiso
-                JOIN materia m ON dp.materia = m.id
-                WHERE a.dni = %s
-            """, (id_alumno,))
-            datos = cursor.fetchall()
-
-            if not datos:
-                return
-
-            doc = Document(ruta_permiso)
-
-            # Extraer datos del primer registro
-            nombre_alumno, dni, nro_permiso, plan_estudio, materia, curso = datos[0]
-
-            # Reemplazar valores en el documento
-            # Llenar encabezados del acta
-            for paragraph in doc.paragraphs:
-                if "PERMISO DE EXAMEN N°" in paragraph.text:
-                    self.aplicar_estilo_encabezado(paragraph, "56", str(nro_permiso), fuente="Arial", tamaño=12, negrita=True)
-                if "alumno/a" in paragraph.text:
-                    self.aplicar_estilo_encabezado(paragraph, "ORTIZ JOEL ALEXANDER", nombre_alumno, fuente="Arial", tamaño=12, negrita=True)
-                if "DNI" in paragraph.text:
-                    self.aplicar_estilo_encabezado(paragraph, "48663822", str(dni), fuente="Arial", tamaño=12, negrita=True)
-                if "Plan de Estudios de" in paragraph.text:
-                    self.aplicar_estilo_encabezado(paragraph, "TEM", plan_estudio, fuente="Arial", tamaño=12, negrita=True)
-
-            # Llenar la tabla con las materias
-            tabla = doc.tables[0]  # Primera tabla del documento
-            orden = 1
-            fila_actual = 1
-            for i, (nombre_alumno, dni, nro_permiso, plan_estudio, materia, curso) in enumerate(datos, start=1):
-                if pd.notna(materia):
-                        if fila_actual < len(tabla.rows):
-                            celda = tabla.rows[fila_actual].cells
-                        else:
-                            celda = tabla.add_row().cells
-
-                        self.aplicar_estilo_personalizado_celda(celda[0], f"{orden:02}", fuente="Arial", tamaño=11, negrita=True)
-                        self.aplicar_estilo_personalizado_celda(celda[1], materia.split(" (")[0], fuente="Arial", tamaño=11, negrita=True)
-                        self.aplicar_estilo_personalizado_celda(celda[2], str(curso) if pd.notna(dni) else "", fuente="Arial",
-                                                        tamaño=11, negrita=True)
-
-                        for idx in [3, 4, 5]:
-                            self.aplicar_estilo_personalizado_celda(celda[idx], "", fuente="Arial", tamaño=11, negrita=True)
-
-                        orden += 1
-                        fila_actual += 1
-            for paragraph in doc.paragraphs:
-                if "TINOGASTA, 30 de junio 		DE 2024" in paragraph.text:
-                    fecha_actual = datetime.now().strftime("TINOGASTA, %d de %B DE %Y").capitalize()
-                    paragraph.text = paragraph.text.replace("TINOGASTA, 30 de junio 		DE 2024", fecha_actual)
-                    # Modificar el estilo de la fuente
-                    run = paragraph.runs[0]  # El "run" representa un fragmento del texto en el párrafo
-                    run.font.name = 'Arial'  # Cambiar la fuente a Arial
-                    run.font.size = Pt(10)  # Cambiar el tamaño de la fuente
-                    run.font.bold = True  # Negrita
-                
-
-            # Guardar el documento modificado
-            # Limpiar caracteres inválidos en el nombre del archivo
-            alumno_limpio = re.sub(r'[<>:"/\\|?*]', '', nombre_alumno)
-
-            # Crear la carpeta para la modalidad si no existe
-            carpeta_alumno = "PERMISO_" + alumno_limpio.upper()
-            if not os.path.exists(carpeta_alumno):
-                os.makedirs(carpeta_alumno)
-
-            # Generar el nombre del archivo
-            nombre_archivo = f"Permiso_{alumno_limpio}.docx"
-
-            # Generar la ruta completa
-            ruta_archivo = os.path.join(carpeta_alumno, nombre_archivo)
-
-            # Guardar el documento
-            doc.save(ruta_archivo)
-    
-    def generar_permiso(self):
-        try:
-            dni_list = self.obtener_alumnos()
-            for dni in dni_list:
-                self.generar_permiso_examen(dni)
-            messagebox.showinfo("Éxito", "Permisos generados exitosamente.")
-        except Exception as e:
-            messagebox.showerror("Error", e)
-
-    def generar_actas_examen(self, modalidad):
-        try:
-            cursor = self.conexion.cursor(dictionary=True)
-            
-            # Consulta para obtener datos de alumnos y materias
-            cursor.execute('''
-                SELECT a.nombre AS alumno, a.dni, dp.curso, dp.condicion, m.nombre AS materia, m.modalidad FROM detalle_permiso dp 
-                JOIN permiso p ON p.nro = dp.id_permiso 
-                JOIN alumno a ON p.dni = a.dni
-                JOIN materia m ON dp.materia = m.id
-                WHERE m.modalidad = %s
-            ''', (modalidad,))
-            
-            datos = cursor.fetchall()
-            
-            
-            # Agrupar por materia, curso y condición
-            grupos = {}
-            for registro in datos:
-                clave = (registro['materia'], registro['curso'], registro['condicion'])
-                if clave not in grupos:
-                    grupos[clave] = []
-                grupos[clave].append(registro)
-            # Procesar cada grupo
-            for (materia, curso, condicion), alumnos in grupos.items():
-                doc = Document(ruta_acta)
-                
-                # Llenar encabezados del acta
-                for paragraph in doc.paragraphs:
-                    if "EXAMEN DE ALUMNO" in paragraph.text:
-                        self.aplicar_estilo_encabezado(paragraph, "REGULAR", condicion)
-                    if "ESPACIO CURRICULAR" in paragraph.text:
-                        self.aplicar_estilo_encabezado(paragraph, "HISTORIA III", materia.split(" (")[0])
-                    if "PLAN DE ESTUDIO" in paragraph.text:
-                        self.aplicar_estilo_encabezado(paragraph, "TEM", modalidad)
-                    if "CURSO" in paragraph.text:
-                        self.aplicar_estilo_encabezado(paragraph, "3º1º", curso)
-                
-                # Llenar tabla con alumnos
-                tabla = doc.tables[0]
-                fila_actual = 2  # Empezar desde la tercera fila (0-based)
-                
-                for i, alumno in enumerate(alumnos, start=1):
-                    if fila_actual >= len(tabla.rows):
-                        tabla.add_row()
-                    
-                    celdas = tabla.rows[fila_actual].cells
-                    self.aplicar_estilo_personalizado_celda(celdas[0], str(i).zfill(2), fuente="Arial", tamaño=11, negrita=True)
-                    self.aplicar_estilo_personalizado_celda(celdas[2], alumno['alumno'], fuente="Arial", tamaño=9, negrita=True)
-                    self.aplicar_estilo_personalizado_celda(celdas[9], str(alumno['dni']) if pd.notna(alumno['dni']) else "", fuente="Arial", tamaño=9, negrita=True)
-
-                    for idx in [1, 3, 4, 5, 6, 7, 8]:
-                        self.aplicar_estilo_personalizado_celda(celdas[idx], "", fuente="Arial", tamaño=9, negrita=True)
-                    
-                    fila_actual += 1
-                
-                # Limpiar caracteres inválidos en el nombre del archivo
-                materia_limpia = re.sub(r'[<>:"/\\|?*]', '', materia.split(" (")[0])
-                curso_limpio = re.sub(r'[<>:"/\\|?*]', '', curso)
-                modalidad_limpia = re.sub(r'[<>:"/\\|?*]', '', modalidad)
-                condicion_limpia = re.sub(r'[<>:"/\\|?*]', '', condicion)
-
-                # Crear la carpeta para la modalidad si no existe
-                carpeta_modalidad = "ACTAS_"+modalidad.upper()
-                if not os.path.exists(carpeta_modalidad):
-                    os.makedirs(carpeta_modalidad)
-
-                # Generar el nombre del archivo
-                nombre_archivo = f"Acta_{modalidad_limpia}{materia_limpia}{curso_limpio}_{condicion_limpia}.docx"
-
-                # Generar la ruta completa
-                ruta_archivo = os.path.join(carpeta_modalidad, nombre_archivo)
-
-                # Guardar el documento
-                doc.save(ruta_archivo)
-                
-            messagebox.showinfo("Éxito", f"Actas {str(modalidad)} generadas correctamente")
-        
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al generar actas: {str(e)}")
-    
-    def generar_actas(self):
-        try:
-            self.generar_actas_examen("TEM")
-            self.generar_actas_examen("MMO")
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al generar actas: {str(e)}")
-
     def mostrar_tabla(self):
         TablaPermisos(self, self.conexion)
 
@@ -279,52 +31,123 @@ class RegistroMateriasApp(tk.Toplevel):
 
         
     def crear_widgets(self):
-        # Campos para datos del alumno
-        tk.Label(self, text="Nombre y Apellido:").pack(pady=5)
-        tk.Entry(self, textvariable=self.nombre, width=40).pack(pady=5)
+        # Configurar estilos
+        style = ttk.Style()
+        style.theme_use('clam')
         
-        tk.Label(self, text="DNI:").pack(pady=5)
+        # Estilo para botones principales
+        style.configure('TButton',
+            font=('Arial', 12, 'bold'),
+            padding=10,
+            relief='flat',
+            foreground='#ffffff',
+            background='#4CAF50',  # Verde moderno
+            borderwidth=0
+        )
+        style.map('TButton',
+            background=[('active', '#45a049'), ('disabled', '#cccccc')],
+            foreground=[('disabled', '#666666')]
+        )
+        
+        # Estilo para botones secundarios
+        style.configure('Secondary.TButton',
+            background='#2196F3',  # Azul
+            font=('Arial', 11)
+        )
+        style.map('Secondary.TButton',
+            background=[('active', '#1976D2')]
+        )
+        
+        # Estilo para botones peligro
+        style.configure('Danger.TButton',
+            background='#f44336',  # Rojo
+            font=('Arial', 11)
+        )
+        style.map('Danger.TButton',
+            background=[('active', '#d32f2f')]
+        )
+
+        # Frame principal
+        main_frame = ttk.Frame(self)
+        main_frame.pack(pady=20, padx=20, fill='both', expand=True)
+
+        # Campos para datos del alumno en un frame
+        form_frame = ttk.LabelFrame(main_frame, text="Datos del Alumno")
+        form_frame.pack(fill='x', pady=10)
+
+        ttk.Label(form_frame, text="Nombre y Apellido:").grid(row=0, column=0, padx=5, pady=5, sticky='w')
+        ttk.Entry(form_frame, textvariable=self.nombre, width=40).grid(row=0, column=1, padx=5, pady=5)
+
+        ttk.Label(form_frame, text="DNI:").grid(row=1, column=0, padx=5, pady=5, sticky='w')
         vcmd = (self.register(self.validate_dni), '%P')
-        tk.Entry(self, textvariable=self.dni, validate='key', 
-               validatecommand=vcmd, width=40).pack(pady=5)
-        
-        tk.Label(self, text="Especialidad:").pack(pady=5)
-        self.combo_especialidad = ttk.Combobox(self, textvariable=self.especialidad, 
-                                            values=["MMO", "TEM", "POLIMODAL"])
-        self.combo_especialidad.pack(pady=5)
+        ttk.Entry(form_frame, textvariable=self.dni, validate='key', 
+                 validatecommand=vcmd, width=40).grid(row=1, column=1, padx=5, pady=5)
+
+        ttk.Label(form_frame, text="Especialidad:").grid(row=2, column=0, padx=5, pady=5, sticky='w')
+        self.combo_especialidad = ttk.Combobox(form_frame, textvariable=self.especialidad, 
+                                              values=["MMO", "TEM", "POLIMODAL"])
+        self.combo_especialidad.grid(row=2, column=1, padx=5, pady=5)
         self.combo_especialidad.bind("<<ComboboxSelected>>", self.actualizar_materias)
-        
-        # Combobox para materias
-        tk.Label(self, text="Materia:").pack(pady=5)
-        self.combo_materia = ttk.Combobox(self, textvariable=self.materia, width=40)
-        self.combo_materia.pack(pady=5)
 
-        # Combobox para curso (año + división)
-        tk.Label(self, text="Curso:").pack(pady=5)
-        self.combo_curso = ttk.Combobox(self, textvariable=self.curso, 
-                                      values=self.generar_cursos())
-        self.combo_curso.pack(pady=5)
-        
-        # Combobox para condición
-        tk.Label(self, text="Condición:").pack(pady=5)
-        self.combo_condicion = ttk.Combobox(self, textvariable=self.condicion, 
-                                         values=["LIBRE", "REGULAR"])
-        self.combo_condicion.pack(pady=5)
+        # Frame para selección de materias
+        materias_frame = ttk.LabelFrame(main_frame, text="Selección de Materias")
+        materias_frame.pack(fill='x', pady=10)
 
-        # Botones en un Frame para alinearlos horizontalmente
-        frame_botones_materias = tk.Frame(self)
-        frame_botones_materias.pack(pady=10)
+        ttk.Label(materias_frame, text="Materia:").grid(row=0, column=0, padx=5, pady=5)
+        self.combo_materia = ttk.Combobox(materias_frame, textvariable=self.materia, width=35)
+        self.combo_materia.grid(row=0, column=1, padx=5, pady=5)
 
-        tk.Button(frame_botones_materias, text="Agregar Materia", command=self.agregar_materia).pack(side="left", padx=5)
-        tk.Button(frame_botones_materias, text="Eliminar Materia Seleccionada", command=self.eliminar_materia).pack(side="left", padx=5)
+        ttk.Label(materias_frame, text="Curso:").grid(row=0, column=2, padx=5, pady=5)
+        self.combo_curso = ttk.Combobox(materias_frame, textvariable=self.curso, 
+                                      values=self.generar_cursos(), width=10)
+        self.combo_curso.grid(row=0, column=3, padx=5, pady=5)
 
+        ttk.Label(materias_frame, text="Condición:").grid(row=0, column=4, padx=5, pady=5)
+        self.combo_condicion = ttk.Combobox(materias_frame, textvariable=self.condicion, 
+                                         values=["LIBRE", "REGULAR"], width=12)
+        self.combo_condicion.grid(row=0, column=5, padx=5, pady=5)
+
+        # Botones de acciones
+        btn_frame = ttk.Frame(materias_frame)
+        btn_frame.grid(row=1, column=0, columnspan=6, pady=10)
+
+        ttk.Button(btn_frame, text="➕ Agregar Materia", style='Secondary.TButton',
+                 command=self.agregar_materia).pack(side='left', padx=5)
+        ttk.Button(btn_frame, text="➖ Eliminar Selección", style='Danger.TButton',
+                 command=self.eliminar_materia).pack(side='left', padx=5)
+
+        # Listbox con scrollbar
+        list_frame = ttk.Frame(main_frame)
+        list_frame.pack(fill='both', expand=True, pady=10)
+
+        scrollbar = ttk.Scrollbar(list_frame)
+        scrollbar.pack(side='right', fill='y')
+
+        self.listbox = tk.Listbox(list_frame, 
+                                yscrollcommand=scrollbar.set,
+                                selectbackground='#e0f7fa',
+                                selectmode='single',
+                                font=('Arial', 11),
+                                height=8)
+        self.listbox.pack(fill='both', expand=True)
+        scrollbar.config(command=self.listbox.yview)
+
+        # Botón final
+        action_frame = ttk.Frame(main_frame)
+        action_frame.pack(fill='x', pady=20)
+
+        ttk.Button(action_frame, text="💾 Guardar Registro", 
+                 style='TButton', command=self.guardar_registro).pack(pady=10)
         
-        # Listbox para materias agregadas
-        self.listbox = tk.Listbox(self, width=50, height=10)
-        self.listbox.pack(pady=10)
+        # Botón para mostrar tabla
+        btn_frame_tabla = ttk.Frame(main_frame)
+        btn_frame_tabla.pack(pady=15, fill='x')
         
-        # Botón para guardar
-        tk.Button(self, text="Guardar Registro", command=self.guardar_registro).pack(pady=10)
+        ttk.Button(btn_frame_tabla,
+                  text="👁️ Ver Permisos Registrados",
+                  style='Secondary.TButton',
+                  command=self.mostrar_tabla,
+                  width=30).pack(pady=5, ipady=3)
 
     def eliminar_materia(self):
         selected_index = self.listbox.curselection()
