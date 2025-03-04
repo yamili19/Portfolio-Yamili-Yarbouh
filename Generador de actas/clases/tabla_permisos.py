@@ -2,19 +2,6 @@ import mysql.connector
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
-import pandas as pd
-import sys
-import re
-import os
-from docx.shared import Pt
-from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
-from datetime import datetime
-from docx.shared import Pt
-from docx import Document
-from .utils import obtener_ruta_recurso
-
-ruta_permiso = obtener_ruta_recurso(r"recursos\PERMISOS EXAMEN - 2023.docx")
 
 
 class TablaPermisos(tk.Toplevel):
@@ -23,76 +10,225 @@ class TablaPermisos(tk.Toplevel):
         self.conexion = conexion
         self.master = parent
         self.title("Registro de Permisos de Examen")
-        self.geometry("1200x600")
-        # Frame para los filtros
-        frame_filtros = tk.Frame(self)
-        frame_filtros.pack(pady=10, fill='x')
+        self.geometry("1280x720")
+        self.configure(bg='#f0f2f5')
         
-        # Filtro por DNI
-        tk.Label(frame_filtros, text="Filtrar por DNI:").pack(side='left', padx=5)
+        # Variables de filtrado
         self.filtro_dni = tk.StringVar()
-        tk.Entry(frame_filtros, textvariable=self.filtro_dni, width=15).pack(side='left', padx=5)
-        
-        # Filtro por Nombre
-        tk.Label(frame_filtros, text="Filtrar por Nombre:").pack(side='left', padx=5)
         self.filtro_nombre = tk.StringVar()
-        tk.Entry(frame_filtros, textvariable=self.filtro_nombre, width=20).pack(side='left', padx=5)
-        
-        # Filtro por Materia
-        tk.Label(frame_filtros, text="Filtrar por Materia:").pack(side='left', padx=5)
         self.filtro_materia = tk.StringVar()
-        self.combo_materias = ttk.Combobox(frame_filtros, 
-                                         textvariable=self.filtro_materia,
-                                         width=25)
-        self.combo_materias.pack(side='left', padx=5)
         
-        # Botón de búsqueda
-        btn_buscar = tk.Button(frame_filtros, text="Buscar", command=self.cargar_datos)
-        btn_buscar.pack(side='left', padx=5)
+        # Configurar estilos
+        self.style = ttk.Style()
+        self._configurar_estilos()
         
-        # Botón limpiar filtros
-        btn_limpiar = tk.Button(frame_filtros, text="Limpiar", command=self.limpiar_filtros)
-        btn_limpiar.pack(side='left', padx=5)
+        # Crear interfaz
+        self._crear_filtros_modernos()
+        self._crear_tabla()
+        self._crear_menu_contextual()
         
-        # Cargar materias en el combo
+        # Cargar datos iniciales
+        self.cargar_datos()
         self.cargar_materias()
+
+    def _configurar_estilos(self):
+        """Configura todos los estilos visuales"""
+        self.style.theme_use('clam')
         
-        # Configurar el Treeview
-        self.tree = ttk.Treeview(
-            self, 
-            columns=('DNI', 'Nombre', 'Materia', 'Especialidad', 'Curso', 'Condición', 
-                    'id_permiso', 'materia_id', 'curso_original'),
-            show='headings'
+        # Estilo general
+        self.style.configure('TFrame', background='#f0f2f5')
+        
+        # Estilos para filtros
+        self.style.configure('Filtro.TEntry', 
+            font=('Arial', 10), 
+            padding=5,
+            relief='flat'
+        )
+        self.style.configure('Filtro.TCombobox', 
+            font=('Arial', 10),
+            padding=5
+        )
+        self.style.configure('Filtro.TLabel', 
+            font=('Arial', 10, 'bold'), 
+            background='#f0f2f5',
+            foreground='#2d3748'
+        )
+        
+        # Estilos para botones
+        self.style.configure('Buscar.TButton', 
+            foreground='white',
+            background='#4CAF50',
+            font=('Arial', 10, 'bold'),
+            padding=10,
+            borderwidth=0,
+            relief='flat'
+        )
+        self.style.map('Buscar.TButton',
+            background=[('active', '#45a049'), ('disabled', '#81C784')]
+        )
+        
+        self.style.configure('Limpiar.TButton', 
+            foreground='white',
+            background='#607D8B',
+            font=('Arial', 10, 'bold'),
+            padding=10,
+            borderwidth=0,
+            relief='flat'
+        )
+        self.style.map('Limpiar.TButton',
+            background=[('active', '#546E7A'), ('disabled', '#90A4AE')]
         )
 
-        # Configurar encabezados visibles
-        self.tree.heading('DNI', text='DNI')
-        self.tree.heading('Nombre', text='Nombre')
-        self.tree.heading('Materia', text='Materia')
-        self.tree.heading('Especialidad', text='Especialidad')
-        self.tree.heading('Curso', text='Curso')
-        self.tree.heading('Condición', text='Condición')
+        # Estilo para la tabla
+        self.style.configure('Treeview.Heading', 
+            font=('Arial', 10, 'bold'), 
+            background='#4a5568', 
+            foreground='white',
+            padding=8,
+            relief='flat'
+        )
+        self.style.configure('Treeview', 
+            font=('Arial', 10), 
+            rowheight=30,
+            fieldbackground='#ffffff',
+            background='#ffffff',
+            borderwidth=0
+        )
+        self.style.map('Treeview', 
+            background=[('selected', '#cbd5e0')],
+            foreground=[('selected', 'black')]
+        )
 
+    def _crear_filtros_modernos(self):
+        """Crea la sección de filtros con diseño moderno"""
+        frame_filtros = ttk.Frame(self, style='TFrame')
+        frame_filtros.pack(pady=15, padx=20, fill='x')
+        
+        # Elementos de filtrado
+        elementos = [
+            ('DNI:', self.filtro_dni, 15),
+            ('Nombre:', self.filtro_nombre, 20),
+            ('Materia:', self.filtro_materia, 25)
+        ]
+        
+        for texto, variable, ancho in elementos:
+            contenedor = ttk.Frame(frame_filtros)
+            contenedor.pack(side='left', padx=8)
+            
+            lbl = ttk.Label(contenedor, text=texto, style='Filtro.TLabel')
+            lbl.pack(side='left')
+            
+            if texto == 'Materia:':
+                self.combo_materias = ttk.Combobox(contenedor, 
+                    textvariable=variable, 
+                    width=ancho,
+                    style='Filtro.TCombobox',
+                    state='readonly'
+                )
+                self.combo_materias.pack(side='left')
+            else:
+                entry = ttk.Entry(contenedor, 
+                    textvariable=variable, 
+                    width=ancho,
+                    style='Filtro.TEntry'
+                )
+                entry.pack(side='left')
+
+        # Contenedor de botones
+        btn_contenedor = ttk.Frame(frame_filtros)
+        btn_contenedor.pack(side='left', padx=15)
+        
+        # Botones con íconos
+        ttk.Button(btn_contenedor, 
+            text="🔍 Buscar", 
+            style='Buscar.TButton',
+            command=self.cargar_datos
+        ).pack(side='left', padx=5, ipadx=8)
+        
+        ttk.Button(btn_contenedor, 
+            text="🧹 Limpiar", 
+            style='Limpiar.TButton',
+            command=self.limpiar_filtros
+        ).pack(side='left', padx=5, ipadx=8)
+
+    def _crear_tabla(self):
+        """Crea y configura la tabla con estilo moderno"""
+        contenedor_tabla = ttk.Frame(self)
+        contenedor_tabla.pack(padx=20, pady=(0, 20), fill='both', expand=True)
+        
+        # Scrollbars
+        scroll_y = ttk.Scrollbar(contenedor_tabla, orient='vertical')
+        scroll_x = ttk.Scrollbar(contenedor_tabla, orient='horizontal')
+        
+        # Configurar Treeview
+        self.tree = ttk.Treeview(
+            contenedor_tabla,
+            columns=('DNI', 'Nombre', 'Materia', 'Especialidad', 'Curso', 'Condición', 
+                    'id_permiso', 'materia_id', 'curso_original'),
+            show='headings',
+            yscrollcommand=scroll_y.set,
+            xscrollcommand=scroll_x.set,
+            style='Treeview'
+        )
+        
+        # Configurar columnas
+        columnas = {
+            'DNI': {'width': 120, 'anchor': 'center'},
+            'Nombre': {'width': 250},
+            'Materia': {'width': 200},
+            'Especialidad': {'width': 120, 'anchor': 'center'},
+            'Curso': {'width': 100, 'anchor': 'center'},
+            'Condición': {'width': 120, 'anchor': 'center'}
+        }
+        
+        for col, config in columnas.items():
+            self.tree.heading(col, text=col)
+            self.tree.column(col, **config)
+        
         # Ocultar columnas técnicas
         for col in ['id_permiso', 'materia_id', 'curso_original']:
             self.tree.column(col, width=0, stretch=False)
-
-        # Scrollbar
-        scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
         
-        # Layout
-        self.tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        # Configurar scrollbars
+        scroll_y.config(command=self.tree.yview)
+        scroll_x.config(command=self.tree.xview)
+        
+        # Diseño en grid
+        self.tree.grid(row=0, column=0, sticky='nsew')
+        scroll_y.grid(row=0, column=1, sticky='ns')
+        scroll_x.grid(row=1, column=0, sticky='ew')
+        
+        contenedor_tabla.grid_rowconfigure(0, weight=1)
+        contenedor_tabla.grid_columnconfigure(0, weight=1)
 
-        # Menú contextual
-        self.menu = tk.Menu(self, tearoff=0)
-        self.menu.add_command(label="Eliminar", command=self.eliminar_registro)
-        self.menu.add_command(label="Modificar", command=self.modificar_registro)
-        self.tree.bind("<Button-3>", self.mostrar_menu)       
+    def _crear_menu_contextual(self):
+        """Crea el menú contextual con estilo moderno"""
+        self.menu = tk.Menu(
+            self,
+            tearoff=0,
+            bg='#2d3748',
+            fg='white',
+            font=('Arial', 10),
+            activebackground='#4a5568',
+            activeforeground='white'
+        )
+        self.menu.add_command(
+            label="✖️ Eliminar Registro",
+            command=self.eliminar_registro
+        )
+        self.menu.add_command(
+            label="✏️ Modificar Registro",
+            command=self.modificar_registro
+        )
+        self.tree.bind("<Button-3>", self.mostrar_menu)
 
-        self.cargar_datos() 
-
+    def mostrar_menu(self, event):
+        """Muestra el menú contextual en la posición del clic"""
+        item = self.tree.identify_row(event.y)
+        if item:
+            self.tree.selection_set(item)
+            self.menu.post(event.x_root, event.y_root)
+        
     def cargar_materias(self):
         cursor = self.conexion.cursor()
         cursor.execute("SELECT DISTINCT nombre FROM materia")

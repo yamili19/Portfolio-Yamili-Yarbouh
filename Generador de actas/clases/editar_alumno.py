@@ -2,16 +2,6 @@ import mysql.connector
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
-import pandas as pd
-import sys
-import re
-import os
-from docx.shared import Pt
-from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
-from datetime import datetime
-from docx.shared import Pt
-from docx import Document
 
 class EditarAlumnoWindow(tk.Toplevel):
     def __init__(self, parent, conexion):

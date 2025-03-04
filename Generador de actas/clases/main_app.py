@@ -3,8 +3,8 @@ from tkinter import ttk
 from .editar_alumno import EditarAlumnoWindow
 from .registro_materias import RegistroMateriasApp
 from .tabla_permisos import TablaPermisos
-from .generar_actas import generar_actas
-from .generar_permisos import generar_permiso
+from utils.generar_actas import generar_actas
+from utils.generar_permisos import generar_permiso
 
 class MainApp(tk.Tk):
     def __init__(self, conexion):
