@@ -299,7 +299,7 @@ class TablaPermisos(tk.Toplevel):
         edit_win.geometry("500x400")
         edit_win.resizable(False, False)
 
-        # Frame principal
+         # Frame principal
         main_frame = ttk.Frame(edit_win, style='TFrame')
         main_frame.pack(padx=20, pady=20, fill='both', expand=True)
 
@@ -366,23 +366,7 @@ class TablaPermisos(tk.Toplevel):
                                             style='Filtro.TCombobox')
                 combo_condicion.grid(row=i, column=1, padx=10, pady=8, sticky='ew')
 
-        # Botón Guardar
-        btn_guardar = ttk.Button(main_frame, 
-                                text="💾 Guardar Cambios", 
-                                style='Buscar.TButton',
-                                command=lambda: self.guardar_cambios(edit_win, valores))
-        btn_guardar.grid(row=7, column=0, columnspan=2, pady=20, ipadx=20)
-
-        # Configurar estilos adicionales
-        self.style.configure('Titulo.TLabel', 
-                        foreground='#2d3748', 
-                        background='#f0f2f5')
-        
-        self.style.configure('Dato.TLabel', 
-                            foreground='#4a5568',
-                            background='#f0f2f5',
-                            font=('Arial', 10))
-
+        # Definir la función guardar_cambios PRIMERO
         def guardar_cambios():
             try:
                 cursor = self.conexion.cursor()
@@ -411,8 +395,25 @@ class TablaPermisos(tk.Toplevel):
             except mysql.connector.Error as err:
                 self.conexion.rollback()
                 messagebox.showerror("Error", f"Error al actualizar: {err}")
+            finally:
+                cursor.close()
+
+        # Ahora crear el botón que referencia la función
+        btn_guardar = ttk.Button(main_frame, 
+                                text="💾 Guardar Cambios", 
+                                style='Buscar.TButton',
+                                command=guardar_cambios)  # La función ya está definida
+        btn_guardar.grid(row=7, column=0, columnspan=2, pady=20, ipadx=20)
+
+         # Configurar estilos adicionales
+        self.style.configure('Titulo.TLabel', 
+                        foreground='#2d3748', 
+                        background='#f0f2f5')
         
-        ttk.Button(edit_win, text="Guardar Cambios", command=guardar_cambios).grid(row=6, columnspan=2, pady=10)
+        self.style.configure('Dato.TLabel', 
+                            foreground='#4a5568',
+                            background='#f0f2f5',
+                            font=('Arial', 10))
 
     def cargar_datos(self):
         try:

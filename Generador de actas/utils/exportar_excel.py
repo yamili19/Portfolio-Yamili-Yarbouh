@@ -9,14 +9,14 @@ def exportar_a_excel(conexion):
     try:
         cursor = conexion.cursor()
         cursor.execute("""
-            SELECT p.nro, a.dni, a.nombre, m.nombre AS materia, dp.curso, dp.condicion 
+            SELECT p.nro, a.dni, a.nombre, m.nombre AS materia, dp.curso, dp.condicion, dp.nota 
             FROM permiso p
             JOIN detalle_permiso dp ON p.nro = dp.id_permiso
             JOIN alumno a ON p.dni = a.dni
             JOIN materia m ON dp.materia = m.id
         """)
         permisos = cursor.fetchall()
-        df_permisos = pd.DataFrame(permisos, columns=["Número", "DNI", "Alumno", "Materia", "Curso", "Condición"])
+        df_permisos = pd.DataFrame(permisos, columns=["Número", "DNI", "Alumno", "Materia", "Curso", "Condición", "Nota"])
 
         cursor.execute("""
             SELECT m.nombre AS materia, m.modalidad, dp.curso, dp.condicion, COUNT(*) AS cantidad_alumnos 

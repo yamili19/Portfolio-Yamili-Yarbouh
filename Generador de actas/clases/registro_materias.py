@@ -246,7 +246,7 @@ class RegistroMateriasApp(tk.Toplevel):
         
             # Guardar materias
             for materia_id, condicion in self.materias_seleccionadas:
-                cursor.execute("INSERT INTO detalle_permiso VALUES (%s, %s, %s, %s)", 
+                cursor.execute("INSERT INTO detalle_permiso (id_permiso, materia, condicion, curso) VALUES (%s, %s, %s, %s)", 
                          (id_permiso, int(materia_id), condicion, curso))
             self.conexion.commit()
         

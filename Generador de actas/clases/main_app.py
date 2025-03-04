@@ -1,11 +1,48 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
+import threading
 from .editar_alumno import EditarAlumnoWindow
 from .registro_materias import RegistroMateriasApp
 from .tabla_permisos import TablaPermisos
 from utils.generar_actas import generar_actas
 from utils.generar_permisos import generar_permiso
 from utils.exportar_excel import exportar_a_excel
+
+class LoadingScreen(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Procesando...")
+        self.geometry("300x100")
+        self.configure(bg='#f0f0f0')
+        self.resizable(False, False)
+        
+        # Centrar la ventana
+        parent_x = parent.winfo_x()
+        parent_y = parent.winfo_y()
+        parent_width = parent.winfo_width()
+        parent_height = parent.winfo_height()
+        
+        x = parent_x + (parent_width - 300) // 2
+        y = parent_y + (parent_height - 100) // 2
+        
+        self.geometry(f"+{x}+{y}")
+        
+        self.label = ttk.Label(
+            self, 
+            text="Procesando, por favor espere...",
+            font=('Arial', 10),
+            background='#f0f0f0'
+        )
+        self.label.pack(pady=10)
+        
+        self.progress = ttk.Progressbar(
+            self, 
+            mode='indeterminate',
+            length=200
+        )
+        self.progress.pack()
+        
+        self.progress.start()
 
 class MainApp(tk.Tk):
     def __init__(self, conexion):
@@ -14,39 +51,76 @@ class MainApp(tk.Tk):
         self.title("Sistema de Gestión de Exámenes")
         self.geometry("400x500")
         self.config(bg="#f0f0f0")
+        self.loading_screen = None
         
-        # Configurar estilos primero
+        # Configurar estilos
         self.establecer_estilo_botones()
         
-        # Contenedor principal centrado
-        main_frame = tk.Frame(self, bg="#f0f0f0")
-        main_frame.place(relx=0.5, rely=0.5, anchor="center")
+        # Contenedor principal
+        self.main_frame = tk.Frame(self, bg="#f0f0f0")
+        self.main_frame.place(relx=0.5, rely=0.5, anchor="center")
 
         # Lista de botones
         botones = [
             ("Nuevo Registro", self.abrir_registro_materias),
             ("Ver Permisos", self.abrir_tabla_permisos),
             ("Editar Alumno", self.abrir_editar_alumno),
-            ("Generar Permisos", lambda: generar_permiso(self.conexion)),
-            ("Generar Actas", lambda: generar_actas(self.conexion)),
-            ("Exportar a Excel", lambda: exportar_a_excel(self.conexion)),
+            ("Generar Permisos", self.iniciar_generar_permisos),
+            ("Generar Actas", self.iniciar_generar_actas),
+            ("Exportar a Excel", self.iniciar_exportar_excel),
             ("Salir", self.quit)
         ]
 
-        # Crear botones dinámicamente
+        # Crear botones
+        self.botones = []
         for texto, comando in botones:
             btn = ttk.Button(
-                main_frame, 
+                self.main_frame, 
                 text=texto, 
                 style="Menu.TButton",
                 command=comando
             )
             btn.pack(pady=5, fill=tk.X)
-            # Forzar aplicación del estilo
-            btn.configure(style="Menu.TButton")
-        
-        # Actualizar estilos al recuperar el foco
+            self.botones.append(btn)
+
         self.bind("<FocusIn>", self.reestablecer_estilos)
+
+    def toggle_buttons(self, state):
+        for btn in self.botones:
+            btn.configure(state=state)
+
+    def mostrar_loading(self):
+        self.toggle_buttons('disabled')
+        self.loading_screen = LoadingScreen(self)
+        self.loading_screen.grab_set()
+
+    def ocultar_loading(self):
+        if self.loading_screen:
+            self.loading_screen.destroy()
+            self.loading_screen = None
+        self.toggle_buttons('normal')
+
+    def ejecutar_con_loading(self, funcion, *args):
+        def wrapper():
+            try:
+                funcion(*args)
+                self.after(0, lambda: messagebox.showinfo("Éxito", "Operación completada correctamente"))
+            except Exception as e:
+                self.after(0, lambda: messagebox.showerror("Error", f"Error: {str(e)}"))
+            finally:
+                self.after(0, self.ocultar_loading)
+        
+        self.mostrar_loading()
+        threading.Thread(target=wrapper, daemon=True).start()
+
+    def iniciar_generar_actas(self):
+        self.ejecutar_con_loading(generar_actas, self.conexion)
+
+    def iniciar_generar_permisos(self):
+        self.ejecutar_con_loading(generar_permiso, self.conexion)
+
+    def iniciar_exportar_excel(self):
+        self.ejecutar_con_loading(exportar_a_excel, self.conexion)
 
     def establecer_estilo_botones(self):
         style = ttk.Style()
