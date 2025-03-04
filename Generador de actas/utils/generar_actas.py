@@ -4,10 +4,12 @@ import re
 import os
 from docx import Document
 from .utils import obtener_ruta_recurso, aplicar_estilo_encabezado, aplicar_estilo_personalizado_celda
+from tkinter import filedialog  
+
 
 ruta_acta = obtener_ruta_recurso(r"recursos\ACTA DE EXAMEN.docx")
 
-def generar_actas_examen(conexion, modalidad):
+def generar_actas_examen(conexion, modalidad, base_path):
         try:
             cursor = conexion.cursor(dictionary=True)
             
@@ -69,8 +71,7 @@ def generar_actas_examen(conexion, modalidad):
                 modalidad_limpia = re.sub(r'[<>:"/\\|?*]', '', modalidad)
                 condicion_limpia = re.sub(r'[<>:"/\\|?*]', '', condicion)
 
-                # Crear la carpeta para la modalidad si no existe
-                carpeta_modalidad = "ACTAS_"+modalidad.upper()
+                carpeta_modalidad = os.path.join(base_path, f"ACTAS_{modalidad.upper()}")
                 if not os.path.exists(carpeta_modalidad):
                     os.makedirs(carpeta_modalidad)
 
@@ -83,14 +84,25 @@ def generar_actas_examen(conexion, modalidad):
                 # Guardar el documento
                 doc.save(ruta_archivo)
                 
-            messagebox.showinfo("Éxito", f"Actas {str(modalidad)} generadas correctamente")
+            messagebox.showinfo("Éxito", f"Actas {str(modalidad)} generadas y guardadas correctamente en {base_path}")
         
         except Exception as e:
             messagebox.showerror("Error", f"Error al generar actas: {str(e)}")
     
 def generar_actas(conexion):
-        try:
-            generar_actas_examen(conexion, "TEM")
-            generar_actas_examen(conexion, "MMO")
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al generar actas: {str(e)}")
+    try:
+        # Pedir ubicación para guardar
+        base_path = filedialog.askdirectory(
+            title="Seleccionar carpeta para guardar las actas",
+            mustexist=True
+        )
+        
+        if not base_path:  # Si el usuario cancela
+            messagebox.showwarning("Operación cancelada", "No se seleccionó ubicación para guardar")
+            return
+            
+        generar_actas_examen(conexion, "TEM", base_path)
+        generar_actas_examen(conexion, "MMO", base_path)
+        
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al generar actas: {str(e)}")

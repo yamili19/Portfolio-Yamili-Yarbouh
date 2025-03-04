@@ -230,10 +230,13 @@ class TablaPermisos(tk.Toplevel):
             self.menu.post(event.x_root, event.y_root)
         
     def cargar_materias(self):
-        cursor = self.conexion.cursor()
-        cursor.execute("SELECT DISTINCT nombre FROM materia")
-        materias = [row[0] for row in cursor.fetchall()]
-        self.combo_materias['values'] = materias
+        try:
+            cursor = self.conexion.cursor()
+            cursor.execute("SELECT DISTINCT nombre FROM materia")
+            materias = [row[0] for row in cursor.fetchall()]
+            self.combo_materias['values'] = materias
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al cargar las materias: {e}")
 
     def limpiar_filtros(self):
         self.filtro_dni.set('')
@@ -292,53 +295,93 @@ class TablaPermisos(tk.Toplevel):
         # Ventana de modificación
         edit_win = tk.Toplevel(self)
         edit_win.title("Modificar Registro")
-        
-        # Variables del formulario
-        materia = tk.StringVar(value=f"{valores[7]} - {valores[2]}")  # ID - Nombre
+        edit_win.configure(bg='#f0f2f5')
+        edit_win.geometry("500x400")
+        edit_win.resizable(False, False)
+
+        # Frame principal
+        main_frame = ttk.Frame(edit_win, style='TFrame')
+        main_frame.pack(padx=20, pady=20, fill='both', expand=True)
+
+        # Título
+        ttk.Label(main_frame, 
+                text="Editar Registro de Permiso", 
+                style='Titulo.TLabel',
+                font=('Arial', 14, 'bold')).grid(row=0, column=0, columnspan=2, pady=15)
+
+        # Variables
+        materia = tk.StringVar(value=f"{valores[7]} - {valores[2]}")
         modalidad = tk.StringVar(value=valores[3])
         curso = tk.StringVar(value=valores[4])
         condicion = tk.StringVar(value=valores[5])
 
-        # Función para actualizar materias según especialidad
+        # Función para actualizar materias
         def actualizar_materias_combo(event=None):
-            cursor = self.conexion.cursor()
-            cursor.execute("SELECT id, nombre FROM materia WHERE modalidad = %s", 
-                        (modalidad.get(),))
-            materias = [f"{row[0]} - {row[1]}" for row in cursor.fetchall()]
-            combo_materia['values'] = materias
+            try:
+                cursor = self.conexion.cursor()
+                cursor.execute("SELECT id, nombre FROM materia WHERE modalidad = %s", 
+                            (modalidad.get(),))
+                materias = [f"{row[0]} - {row[1]}" for row in cursor.fetchall()]
+                combo_materia['values'] = materias
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al cargar las materias: {e}")
 
-        # Campos editables
-        ttk.Label(edit_win, text="DNI:").grid(row=0, column=0, padx=5, pady=5)
-        ttk.Label(edit_win, text=valores[0]).grid(row=0, column=1, padx=5, pady=5)  # Display DNI as a label
-        ttk.Label(edit_win, text="Nombre:").grid(row=1, column=0, padx=5, pady=5)
-        ttk.Label(edit_win, text=valores[1]).grid(row=1, column=1, padx=5, pady=5) # Display Nombre as a label
-        
-        #Especialidad
-        ttk.Label(edit_win, text="Especialidad:").grid(row=2, column=0, padx=5, pady=5)
-        ttk.Label(edit_win, text=valores[3]).grid(row=2, column=1, padx=5, pady=5) # Display Nombre as a label
+        # Configurar grid
+        rows = [
+            ('DNI:', valores[0]),
+            ('Nombre:', valores[1]),
+            ('Especialidad:', valores[3]),
+            ('Materia:', materia),
+            ('Curso:', curso),
+            ('Condición:', condicion)
+        ]
 
-        #combo_modalidad = ttk.Combobox(edit_win, textvariable=modalidad, 
-        #                           values=["MMO", "TEM", "POLIMODAL"], state='readonly')
-        #combo_modalidad.grid(row=2, column=1, padx=5, pady=5)
-        #combo_modalidad.bind("<<ComboboxSelected>>", actualizar_materias_combo)
+        for i, (label_text, value) in enumerate(rows, start=1):
+            # Etiquetas
+            ttk.Label(main_frame, 
+                    text=label_text, 
+                    style='Filtro.TLabel').grid(row=i, column=0, padx=10, pady=8, sticky='e')
+            
+            # Campos
+            if label_text in ['DNI:', 'Nombre:', 'Especialidad:']:
+                ttk.Label(main_frame, 
+                        text=value, 
+                        style='Dato.TLabel').grid(row=i, column=1, padx=10, pady=8, sticky='w')
+            elif label_text == 'Materia:':
+                combo_materia = ttk.Combobox(main_frame, 
+                                            textvariable=value,
+                                            style='Filtro.TCombobox')
+                combo_materia.grid(row=i, column=1, padx=10, pady=8, sticky='ew')
+                actualizar_materias_combo()
+            elif label_text == 'Curso:':
+                combo_curso = ttk.Combobox(main_frame, 
+                                        textvariable=value, 
+                                        values=self.master.generar_cursos(),
+                                        style='Filtro.TCombobox')
+                combo_curso.grid(row=i, column=1, padx=10, pady=8, sticky='ew')
+            elif label_text == 'Condición:':
+                combo_condicion = ttk.Combobox(main_frame, 
+                                            textvariable=value, 
+                                            values=["LIBRE", "REGULAR"],
+                                            style='Filtro.TCombobox')
+                combo_condicion.grid(row=i, column=1, padx=10, pady=8, sticky='ew')
+
+        # Botón Guardar
+        btn_guardar = ttk.Button(main_frame, 
+                                text="💾 Guardar Cambios", 
+                                style='Buscar.TButton',
+                                command=lambda: self.guardar_cambios(edit_win, valores))
+        btn_guardar.grid(row=7, column=0, columnspan=2, pady=20, ipadx=20)
+
+        # Configurar estilos adicionales
+        self.style.configure('Titulo.TLabel', 
+                        foreground='#2d3748', 
+                        background='#f0f2f5')
         
-        # Materia (dependiente de especialidad)
-        ttk.Label(edit_win, text="Materia:").grid(row=3, column=0, padx=5, pady=5)
-        combo_materia = ttk.Combobox(edit_win, textvariable=materia)
-        combo_materia.grid(row=3, column=1, padx=5, pady=5)
-        actualizar_materias_combo()  # Cargar inicialmente
-        
-        # Curso
-        ttk.Label(edit_win, text="Curso:").grid(row=4, column=0, padx=5, pady=5)
-        combo_curso = ttk.Combobox(edit_win, textvariable=curso, 
-                                values=self.master.generar_cursos())
-        combo_curso.grid(row=4, column=1, padx=5, pady=5)
-        
-        # Condición
-        ttk.Label(edit_win, text="Condición:").grid(row=5, column=0, padx=5, pady=5)
-        combo_condicion = ttk.Combobox(edit_win, textvariable=condicion, 
-                                    values=["LIBRE", "REGULAR"])
-        combo_condicion.grid(row=5, column=1, padx=5, pady=5)
+        self.style.configure('Dato.TLabel', 
+                            foreground='#4a5568',
+                            background='#f0f2f5',
+                            font=('Arial', 10))
 
         def guardar_cambios():
             try:

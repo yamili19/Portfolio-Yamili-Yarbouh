@@ -1,4 +1,4 @@
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 import pandas as pd
 import re
 import os
@@ -10,7 +10,7 @@ from .utils import obtener_ruta_recurso, aplicar_estilo_encabezado, aplicar_esti
 
 ruta_permiso = obtener_ruta_recurso(r"recursos\PERMISOS EXAMEN - 2023.docx")
 
-def generar_permiso_examen(conexion, id_alumno):
+def generar_permiso_examen(conexion, id_alumno, base_path):
             cursor = conexion.cursor()
             # Obtener datos del alumno
             cursor.execute("""
@@ -80,7 +80,7 @@ def generar_permiso_examen(conexion, id_alumno):
             alumno_limpio = re.sub(r'[<>:"/\\|?*]', '', nombre_alumno)
 
             # Crear la carpeta para la modalidad si no existe
-            carpeta_alumno = "PERMISO_" + alumno_limpio.upper()
+            carpeta_alumno = os.path.join(base_path, f"PERMISO{alumno_limpio.upper()}")
             if not os.path.exists(carpeta_alumno):
                 os.makedirs(carpeta_alumno)
 
@@ -105,9 +105,18 @@ def obtener_alumnos(conexion):
     
 def generar_permiso(conexion):
         try:
+            # Pedir ubicación para guardar
+            base_path = filedialog.askdirectory(
+                title="Seleccionar carpeta para guardar los permisos",
+                mustexist=True
+            )
+            
+            if not base_path:  # Si el usuario cancela
+                messagebox.showwarning("Operación cancelada", "No se seleccionó ubicación para guardar")
+                return
             dni_list = obtener_alumnos(conexion)
             for dni in dni_list:
-                generar_permiso_examen(conexion, dni)
+                generar_permiso_examen(conexion, dni, base_path)
             messagebox.showinfo("Éxito", "Permisos generados exitosamente.")
         except Exception as e:
             messagebox.showerror("Error", e)

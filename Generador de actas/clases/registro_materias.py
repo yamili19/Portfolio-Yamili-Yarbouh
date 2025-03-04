@@ -99,7 +99,7 @@ class RegistroMateriasApp(tk.Toplevel):
 
         ttk.Label(materias_frame, text="Curso:").grid(row=0, column=2, padx=5, pady=5)
         self.combo_curso = ttk.Combobox(materias_frame, textvariable=self.curso, 
-                                      values=self.generar_cursos(), width=10)
+                                      values=self.master.generar_cursos(), width=10)
         self.combo_curso.grid(row=0, column=3, padx=5, pady=5)
 
         ttk.Label(materias_frame, text="Condición:").grid(row=0, column=4, padx=5, pady=5)
@@ -158,13 +158,6 @@ class RegistroMateriasApp(tk.Toplevel):
         else:
             messagebox.showinfo("Información", "Seleccione una materia para eliminar.")
     
-    def generar_cursos(self):
-        """Genera todas las combinaciones de año y división"""
-        cursos = []
-        for anio in range(1, 8):  # Años del 1 al 7
-            for division in range(1, 3):  # Divisiones 1 y 2
-                cursos.append(f"{anio}°{division}°")
-        return cursos
     
     def actualizar_materias(self, event=None):
         cursor = self.conexion.cursor()
