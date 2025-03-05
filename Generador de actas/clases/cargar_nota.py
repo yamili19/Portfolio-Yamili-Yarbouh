@@ -56,7 +56,6 @@ class CargarNotaWindow(tk.Toplevel):
             ''', (nota_valor, self.id_permiso, self.materia_id))
             self.conexion.commit()
             messagebox.showinfo("Éxito", "Nota actualizada correctamente")
-            self.destroy()
         except mysql.connector.Error as err:
             self.conexion.rollback()
             messagebox.showerror("Error", f"No se pudo guardar la nota: {err}")

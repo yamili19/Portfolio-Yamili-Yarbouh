@@ -2,6 +2,7 @@ import mysql.connector
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
+from .cargar_nota import CargarNotaWindow
 
 
 class TablaPermisos(tk.Toplevel):
@@ -163,7 +164,7 @@ class TablaPermisos(tk.Toplevel):
         # Configurar Treeview
         self.tree = ttk.Treeview(
             contenedor_tabla,
-            columns=('DNI', 'Nombre', 'Materia', 'Especialidad', 'Curso', 'Condición', 
+            columns=('DNI', 'Nombre', 'Materia', 'Especialidad', 'Curso', 'Condición', 'Nota', 
                     'id_permiso', 'materia_id', 'curso_original'),
             show='headings',
             yscrollcommand=scroll_y.set,
@@ -178,7 +179,8 @@ class TablaPermisos(tk.Toplevel):
             'Materia': {'width': 200},
             'Especialidad': {'width': 120, 'anchor': 'center'},
             'Curso': {'width': 100, 'anchor': 'center'},
-            'Condición': {'width': 120, 'anchor': 'center'}
+            'Condición': {'width': 120, 'anchor': 'center'},
+            'Nota': {'width': 120, 'anchor': 'center'}
         }
         
         for col, config in columnas.items():
@@ -200,6 +202,16 @@ class TablaPermisos(tk.Toplevel):
         
         contenedor_tabla.grid_rowconfigure(0, weight=1)
         contenedor_tabla.grid_columnconfigure(0, weight=1)
+    
+    def cargar_nota(self):
+        selected = self.tree.selection()
+        if not selected:
+            return
+            
+        item = self.tree.item(selected[0])
+        valores = item['values']
+        CargarNotaWindow(self, self.conexion, valores[7], valores[8])
+        self.cargar_datos()
 
     def _crear_menu_contextual(self):
         """Crea el menú contextual con estilo moderno"""
@@ -220,6 +232,12 @@ class TablaPermisos(tk.Toplevel):
             label="✏️ Modificar Registro",
             command=self.modificar_registro
         )
+
+        self.menu.add_command(
+            label="📝 Cargar Nota",
+            command=self.cargar_nota
+        )
+
         self.tree.bind("<Button-3>", self.mostrar_menu)
 
     def mostrar_menu(self, event):
@@ -266,15 +284,15 @@ class TablaPermisos(tk.Toplevel):
                 DELETE FROM detalle_permiso
                 WHERE id_permiso = %s 
                 AND materia = %s 
-            ''', (valores[6], valores[7]))
+            ''', (valores[7], valores[8]))
 
             # Verificar si quedan otros detalles para este permiso
-            cursor.execute("SELECT COUNT(*) FROM detalle_permiso WHERE id_permiso = %s", (valores[6],))
+            cursor.execute("SELECT COUNT(*) FROM detalle_permiso WHERE id_permiso = %s", (valores[7],))
             count = cursor.fetchone()[0]
 
             # Si no hay más detalles, eliminar el permiso
             if count == 0:
-                cursor.execute("DELETE FROM permiso WHERE nro = %s", (valores[6],))
+                cursor.execute("DELETE FROM permiso WHERE nro = %s", (valores[7],))
 
             self.conexion.commit()
             self.cargar_datos()
@@ -383,8 +401,8 @@ class TablaPermisos(tk.Toplevel):
                 ''', (condicion.get(), 
                     materia_id,
                     curso.get(),
-                    valores[6],  # id_permiso
-                    valores[7])) # materia_id original
+                    valores[7],  # id_permiso
+                    valores[8])) # materia_id original
                 
                 self.conexion.commit()               
 
@@ -426,6 +444,7 @@ class TablaPermisos(tk.Toplevel):
                     m.modalidad,
                     dp.curso,
                     dp.condicion,
+                    dp.nota,
                     p.nro,
                     m.id,
                     dp.curso
