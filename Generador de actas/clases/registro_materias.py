@@ -162,10 +162,33 @@ class RegistroMateriasApp(tk.Toplevel):
     def actualizar_materias(self, event=None):
         cursor = self.conexion.cursor()
         especialidad = self.especialidad.get()
+        
+        # Obtener materias de la base de datos según la especialidad
         cursor.execute("SELECT id, nombre FROM materia WHERE modalidad = %s", (especialidad,))
-        materias = [f"{row[0]} - {row[1]}" for row in cursor.fetchall()]
-        self.combo_materia['values'] = materias
-    
+        self.lista_materias = [f"{row[0]} - {row[1]}" for row in cursor.fetchall()]
+        
+        # Asignar todas las materias al ComboBox inicialmente
+        self.combo_materia['values'] = self.lista_materias
+
+        # Configurar eventos para autocompletar
+        self.combo_materia.unbind('<KeyRelease>')
+        self.combo_materia.bind('<KeyRelease>', self.filtrar_materias)
+
+    def filtrar_materias(self, event=None):
+        texto = self.combo_materia.get().lower()
+        
+        if texto:
+            filtradas = [m for m in self.lista_materias if texto in m.lower()]
+        else:
+            filtradas = self.lista_materias
+
+        # Actualizar la lista de valores de manera diferida para no interrumpir la escritura
+        self.after(500, lambda: self.combo_materia.config(values=filtradas))
+
+        # Mostrar la lista si hay opciones
+        if filtradas:
+            self.combo_materia.event_generate('<Down>')
+
     def agregar_materia(self):
         materia = self.combo_materia.get()
         condicion = self.condicion.get()
@@ -261,10 +284,14 @@ class RegistroMateriasApp(tk.Toplevel):
             self.listbox.delete(0, tk.END)
             self.materias_seleccionadas = []
         
-            tk.messagebox.showinfo("Éxito", "Registro guardado correctamente")
+            tk.messagebox.showinfo("Éxito", "✅ Registro guardado correctamente")
         except mysql.connector.Error as err:
             self.conexion.rollback()
-            messagebox.showerror("Error", f"Error de base de datos:\n{err}")
+            self.conexion.rollback()
+            if err.errno == 1062:  # Código de error para clave duplicada
+                messagebox.showerror("Error", "⚠️ El alumno ya se encuentra inscripto en alguna de las materias seleccionadas.")
+            else:
+                messagebox.showerror("Error", f"🚨 Error de base de datos:\n{err}")
         finally:
             cursor.close()
          

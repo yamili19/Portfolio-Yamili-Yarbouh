@@ -120,6 +120,6 @@ def generar_permiso(conexion):
             dni_list = obtener_alumnos(conexion)
             for dni in dni_list:
                 generar_permiso_examen(conexion, dni, base_path)
-            messagebox.showinfo("Éxito", "Permisos generados exitosamente.")
+            messagebox.showinfo("Éxito", f"✅ Permisos generados y guardados correctamente en {base_path}.")
         except Exception as e:
-            messagebox.showerror("Error", e)
+            messagebox.showerror("Error", f"🚨 Error al generar permisos {e}")

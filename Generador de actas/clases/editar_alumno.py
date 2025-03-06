@@ -174,7 +174,7 @@ class EditarAlumnoWindow(tk.Toplevel):
             """, (nuevo_nombre, nueva_modalidad, dni))
             
             self.conexion.commit()
-            messagebox.showinfo("Éxito", "Datos actualizados correctamente")
+            messagebox.showinfo("Éxito", "✅ Datos actualizados correctamente")
             self.destroy()
         except mysql.connector.Error as err:
             self.conexion.rollback()

@@ -68,7 +68,7 @@ def exportar_a_excel(conexion):
         ajustar_ancho_columnas(ruta_actas)
 
 
-        messagebox.showinfo("Éxito", f"Archivos exportados correctamente en:\n{path}")
+        messagebox.showinfo("Éxito", f"✅ Archivos exportados correctamente en:\n{path}")
     except Exception as e:
         messagebox.showerror("Error", f"Error al exportar a Excel:\n{str(e)}")
     finally:

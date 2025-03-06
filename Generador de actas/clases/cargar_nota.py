@@ -59,11 +59,11 @@ class CargarNotaWindow(tk.Toplevel):
                 WHERE id_permiso = %s AND materia = %s
             ''', (nota_valor, self.id_permiso, self.materia_id))
             self.conexion.commit()
-            messagebox.showinfo("Éxito", "Nota actualizada correctamente")
+            messagebox.showinfo("Éxito", "✅ Nota actualizada correctamente")
             self.master.cargar_datos()
             self.destroy()
         except mysql.connector.Error as err:
             self.conexion.rollback()
-            messagebox.showerror("Error", f"No se pudo guardar la nota: {err}")
+            messagebox.showerror("Error", f"🚨 No se pudo guardar la nota: {err}")
         finally:
             cursor.close()

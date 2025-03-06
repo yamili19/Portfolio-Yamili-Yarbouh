@@ -85,10 +85,10 @@ def generar_actas_examen(conexion, modalidad, base_path):
                 # Guardar el documento
                 doc.save(ruta_archivo)
                 
-            messagebox.showinfo("Éxito", f"Actas {str(modalidad)} generadas y guardadas correctamente en {base_path}")
+            messagebox.showinfo("Éxito", f"✅ Actas {str(modalidad)} generadas y guardadas correctamente en {base_path}")
         
         except Exception as e:
-            messagebox.showerror("Error", f"Error al generar actas: {str(e)}")
+            messagebox.showerror("Error", f"🚨 Error al generar actas: {str(e)}")
     
 def generar_actas(conexion):
     try:

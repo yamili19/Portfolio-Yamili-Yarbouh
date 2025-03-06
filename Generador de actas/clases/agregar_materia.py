@@ -117,18 +117,44 @@ class AgregarMateriaWindow(tk.Toplevel):
     def guardar_cambios(self):
         materia = self.materia.get().upper()
         modalidad = self.modalidad.get()
-            
+        
+        if not materia or not modalidad:
+            messagebox.showerror("Error", "Todos los campos son obligatorios")
+            return
+        
         cursor = self.conexion.cursor()
         try:
+            # Verificar si ya existe la combinación materia-modalidad
             cursor.execute("""
-                INSERT INTO materia (nombre, modalidad) VALUES (%s, %s)
-            """, (materia.upper(), modalidad,))
+                SELECT COUNT(*) 
+                FROM materia 
+                WHERE nombre = %s AND modalidad = %s
+            """, (materia, modalidad))
+            
+            if cursor.fetchone()[0] > 0:
+                messagebox.showerror("Error", 
+                    "⚠️ Esta materia ya existe en la modalidad seleccionada")
+                return
+                
+            # Insertar nueva materia si no existe
+            cursor.execute("""
+                INSERT INTO materia (nombre, modalidad) 
+                VALUES (%s, %s)
+            """, (materia, modalidad))
             
             self.conexion.commit()
-            messagebox.showinfo("Éxito", "Materia agregada correctamente.")
+            messagebox.showinfo("Éxito", 
+                "✅ Materia agregada correctamente")
             self.destroy()
+            
         except mysql.connector.Error as err:
             self.conexion.rollback()
-            messagebox.showerror("Error", f"Error al actualizar: {err}")
+            # Capturar error de clave única por si acaso
+            if err.errno == 1062:
+                messagebox.showerror("Error", 
+                    "⚠️ Esta materia ya existe en la modalidad seleccionada.")
+            else:
+                messagebox.showerror("Error", 
+                    f"🚨 Error de base de datos:\n{err}")
         finally:
             cursor.close()
