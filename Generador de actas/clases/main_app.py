@@ -7,6 +7,7 @@ from .tabla_permisos import TablaPermisos
 from utils.generar_actas import generar_actas
 from utils.generar_permisos import generar_permiso
 from utils.exportar_excel import exportar_a_excel
+from .agregar_materia import AgregarMateriaWindow
 
 class LoadingScreen(tk.Toplevel):
     def __init__(self, parent):
@@ -64,6 +65,7 @@ class MainApp(tk.Tk):
         botones = [
             ("Nuevo Registro", self.abrir_registro_materias),
             ("Ver Permisos", self.abrir_tabla_permisos),
+            ("Agregar Materia", self.abrir_agregar_materia),
             ("Editar Alumno", self.abrir_editar_alumno),
             ("Generar Permisos", self.iniciar_generar_permisos),
             ("Generar Actas", self.iniciar_generar_actas),
@@ -154,6 +156,9 @@ class MainApp(tk.Tk):
         
     def abrir_registro_materias(self):
         RegistroMateriasApp(self, self.conexion)
+
+    def abrir_agregar_materia(self):
+        AgregarMateriaWindow(self, self.conexion)
 
     def abrir_tabla_permisos(self):
         TablaPermisos(self, self.conexion)

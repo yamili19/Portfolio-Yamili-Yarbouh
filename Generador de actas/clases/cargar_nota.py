@@ -29,14 +29,18 @@ class CargarNotaWindow(tk.Toplevel):
     
     def cargar_nota_actual(self):
         cursor = self.conexion.cursor()
-        cursor.execute('''
-            SELECT nota FROM detalle_permiso 
-            WHERE id_permiso = %s AND materia = %s
-        ''', (self.id_permiso, self.materia_id))
-        resultado = cursor.fetchone()
-        if resultado and resultado[0]:
-            self.nota.set(str(resultado[0]))
-        cursor.close()
+        try:
+            cursor.execute('''
+                SELECT nota FROM detalle_permiso 
+                WHERE id_permiso = %s AND materia = %s
+            ''', (self.id_permiso, self.materia_id))
+            resultado = cursor.fetchone()
+            if resultado and resultado[0]:
+                self.nota.set(str(resultado[0]))
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al cargar las notas: {e}")
+        finally:
+            cursor.close()
     
     def guardar_nota(self):
         try:
@@ -61,3 +65,5 @@ class CargarNotaWindow(tk.Toplevel):
         except mysql.connector.Error as err:
             self.conexion.rollback()
             messagebox.showerror("Error", f"No se pudo guardar la nota: {err}")
+        finally:
+            cursor.close()

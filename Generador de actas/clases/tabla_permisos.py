@@ -248,13 +248,16 @@ class TablaPermisos(tk.Toplevel):
             self.menu.post(event.x_root, event.y_root)
         
     def cargar_materias(self):
+        cursor = self.conexion.cursor()
+
         try:
-            cursor = self.conexion.cursor()
             cursor.execute("SELECT DISTINCT nombre FROM materia")
             materias = [row[0] for row in cursor.fetchall()]
             self.combo_materias['values'] = materias
         except Exception as e:
             messagebox.showerror("Error", f"Error al cargar las materias: {e}")
+        finally:
+            cursor.close()
 
     def limpiar_filtros(self):
         self.filtro_dni.set('')
@@ -276,9 +279,9 @@ class TablaPermisos(tk.Toplevel):
             
         item = self.tree.item(selected[0])
         valores = item['values']
-        
+        cursor = self.conexion.cursor()
+
         try:
-            cursor = self.conexion.cursor()
             # Eliminar el detalle_permiso
             cursor.execute('''
                 DELETE FROM detalle_permiso
@@ -301,6 +304,8 @@ class TablaPermisos(tk.Toplevel):
         except mysql.connector.Error as err:
             self.conexion.rollback()
             messagebox.showerror("Error", f"No se pudo eliminar: {err}")
+        finally:
+            cursor.close()
     
     def modificar_registro(self):
         selected = self.tree.selection()
@@ -335,14 +340,17 @@ class TablaPermisos(tk.Toplevel):
 
         # Función para actualizar materias
         def actualizar_materias_combo(event=None):
+            cursor = self.conexion.cursor()
+
             try:
-                cursor = self.conexion.cursor()
                 cursor.execute("SELECT id, nombre FROM materia WHERE modalidad = %s", 
                             (modalidad.get(),))
                 materias = [f"{row[0]} - {row[1]}" for row in cursor.fetchall()]
                 combo_materia['values'] = materias
             except Exception as e:
                 messagebox.showerror("Error", f"Error al cargar las materias: {e}")
+            finally:
+                cursor.close()
 
         # Configurar grid
         rows = [
@@ -386,8 +394,9 @@ class TablaPermisos(tk.Toplevel):
 
         # Definir la función guardar_cambios PRIMERO
         def guardar_cambios():
+            cursor = self.conexion.cursor()
+
             try:
-                cursor = self.conexion.cursor()
                 # Extraer ID de materia
                 materia_id = materia.get().split(" - ")[0]
                 
@@ -434,6 +443,7 @@ class TablaPermisos(tk.Toplevel):
                             font=('Arial', 10))
 
     def cargar_datos(self):
+        cursor = self.conexion.cursor()
         try:
             # Construir consulta con filtros
             query = '''
@@ -484,3 +494,5 @@ class TablaPermisos(tk.Toplevel):
                 
         except mysql.connector.Error as err:
             messagebox.showerror("Error", f"Error al cargar datos:\n{err}")
+        finally:
+            cursor.close()

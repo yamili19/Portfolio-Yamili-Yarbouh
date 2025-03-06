@@ -10,8 +10,9 @@ from tkinter import filedialog
 ruta_acta = obtener_ruta_recurso(r"recursos\ACTA DE EXAMEN.docx")
 
 def generar_actas_examen(conexion, modalidad, base_path):
+        cursor = conexion.cursor(dictionary=True)
+
         try:
-            cursor = conexion.cursor(dictionary=True)
             
             # Consulta para obtener datos de alumnos y materias
             cursor.execute('''

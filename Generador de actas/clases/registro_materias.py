@@ -222,7 +222,8 @@ class RegistroMateriasApp(tk.Toplevel):
         if not self.dni.get().isdigit() or len(self.dni.get()) < 7:
             messagebox.showerror("Error", "DNI inválido: Debe contener sólo números y tener al menos 7 dígitos")
             return
-
+        
+        cursor = self.conexion.cursor()
         try: 
             # Guardar alumno
             dni = self.dni.get()
@@ -230,7 +231,7 @@ class RegistroMateriasApp(tk.Toplevel):
             curso = self.curso.get()
             especialidad = self.especialidad.get()
 
-            cursor = self.conexion.cursor()
+            
         
             cursor.execute("INSERT IGNORE INTO alumno VALUES (%s, %s, %s)", (dni, nombre.upper(), especialidad.upper()))
         
@@ -263,4 +264,7 @@ class RegistroMateriasApp(tk.Toplevel):
             tk.messagebox.showinfo("Éxito", "Registro guardado correctamente")
         except mysql.connector.Error as err:
             self.conexion.rollback()
-            messagebox.showerror("Error", f"Error de base de datos:\n{err}") 
+            messagebox.showerror("Error", f"Error de base de datos:\n{err}")
+        finally:
+            cursor.close()
+         

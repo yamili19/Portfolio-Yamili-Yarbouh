@@ -25,9 +25,9 @@ def exportar_a_excel(conexion):
     if not path:
         messagebox.showwarning("Advertencia", "No se seleccionó ninguna ubicación")
         return
-    
+    cursor = conexion.cursor()
+
     try:
-        cursor = conexion.cursor()
         cursor.execute("""
             SELECT p.nro, a.dni, a.nombre, m.nombre AS materia, dp.curso, dp.condicion, dp.nota 
             FROM permiso p
@@ -71,3 +71,5 @@ def exportar_a_excel(conexion):
         messagebox.showinfo("Éxito", f"Archivos exportados correctamente en:\n{path}")
     except Exception as e:
         messagebox.showerror("Error", f"Error al exportar a Excel:\n{str(e)}")
+    finally:
+        cursor.close()
