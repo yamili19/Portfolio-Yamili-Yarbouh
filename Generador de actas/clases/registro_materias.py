@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
 from .tabla_permisos import TablaPermisos
+from utils.utils import filtrar_materias
 
 
 class RegistroMateriasApp(tk.Toplevel):
@@ -175,19 +176,7 @@ class RegistroMateriasApp(tk.Toplevel):
         self.combo_materia.bind('<KeyRelease>', self.filtrar_materias)
 
     def filtrar_materias(self, event=None):
-        texto = self.combo_materia.get().lower()
-        
-        if texto:
-            filtradas = [m for m in self.lista_materias if texto in m.lower()]
-        else:
-            filtradas = self.lista_materias
-
-        # Actualizar la lista de valores de manera diferida para no interrumpir la escritura
-        self.after(500, lambda: self.combo_materia.config(values=filtradas))
-
-        # Mostrar la lista si hay opciones
-        if filtradas:
-            self.combo_materia.event_generate('<Down>')
+        filtrar_materias(self.combo_materia, self.lista_materias)
 
     def agregar_materia(self):
         materia = self.combo_materia.get()

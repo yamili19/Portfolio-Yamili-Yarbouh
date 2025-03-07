@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
 from .cargar_nota import CargarNotaWindow
+from utils.utils import filtrar_materias
 
 
 class TablaPermisos(tk.Toplevel):
@@ -123,10 +124,11 @@ class TablaPermisos(tk.Toplevel):
                 self.combo_materias = ttk.Combobox(contenedor, 
                     textvariable=variable, 
                     width=ancho,
-                    style='Filtro.TCombobox',
-                    state='readonly'
+                    style='Filtro.TCombobox'
                 )
                 self.combo_materias.pack(side='left')
+                self.combo_materias.bind("<KeyRelease>", lambda event: filtrar_materias(self.combo_materias, self.materias))
+
             else:
                 entry = ttk.Entry(contenedor, 
                     textvariable=variable, 
@@ -252,8 +254,8 @@ class TablaPermisos(tk.Toplevel):
 
         try:
             cursor.execute("SELECT DISTINCT nombre FROM materia")
-            materias = [row[0] for row in cursor.fetchall()]
-            self.combo_materias['values'] = materias
+            self.materias = [row[0] for row in cursor.fetchall()]
+            self.combo_materias['values'] = self.materias
         except Exception as e:
             messagebox.showerror("Error", f"Error al cargar las materias: {e}")
         finally:
@@ -341,16 +343,17 @@ class TablaPermisos(tk.Toplevel):
         # Función para actualizar materias
         def actualizar_materias_combo(event=None):
             cursor = self.conexion.cursor()
-
+            materias_modalidad = []
             try:
                 cursor.execute("SELECT id, nombre FROM materia WHERE modalidad = %s", 
                             (modalidad.get(),))
-                materias = [f"{row[0]} - {row[1]}" for row in cursor.fetchall()]
-                combo_materia['values'] = materias
+                materias_modalidad = [f"{row[0]} - {row[1]}" for row in cursor.fetchall()]
+                combo_materia['values'] = materias_modalidad
             except Exception as e:
                 messagebox.showerror("Error", f"Error al cargar las materias: {e}")
             finally:
                 cursor.close()
+            return materias_modalidad
 
         # Configurar grid
         rows = [
@@ -378,7 +381,9 @@ class TablaPermisos(tk.Toplevel):
                                             textvariable=value,
                                             style='Filtro.TCombobox')
                 combo_materia.grid(row=i, column=1, padx=10, pady=8, sticky='ew')
-                actualizar_materias_combo()
+                materias_modalidad = actualizar_materias_combo()
+                combo_materia.bind("<KeyRelease>", lambda event: filtrar_materias(combo_materia, materias_modalidad))
+
             elif label_text == 'Curso:':
                 combo_curso = ttk.Combobox(main_frame, 
                                         textvariable=value, 
