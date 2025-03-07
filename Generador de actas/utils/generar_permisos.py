@@ -11,6 +11,8 @@ from .utils import obtener_ruta_recurso, aplicar_estilo_encabezado, aplicar_esti
 ruta_permiso = obtener_ruta_recurso(r"recursos\PERMISOS EXAMEN - 2023.docx")
 
 def generar_permiso_examen(conexion, id_alumno, base_path):
+    mes_actual_numero = datetime.now().month
+    año_actual_numero = datetime.now().year
     try:
         cursor = conexion.cursor()
         # Obtener datos del alumno
@@ -20,8 +22,8 @@ def generar_permiso_examen(conexion, id_alumno, base_path):
             JOIN permiso p ON a.dni = p.dni
             JOIN detalle_permiso dp ON p.nro = dp.id_permiso
             JOIN materia m ON dp.materia = m.id
-            WHERE a.dni = %s
-        """, (id_alumno,))
+            WHERE a.dni = %s AND MONTH(p.fechaPermiso) = %s AND YEAR(p.fechaPermiso) = %s
+        """, (id_alumno, mes_actual_numero, año_actual_numero,))
         datos = cursor.fetchall()
 
         if not datos:

@@ -5,12 +5,15 @@ import os
 from docx import Document
 from .utils import obtener_ruta_recurso, aplicar_estilo_encabezado, aplicar_estilo_personalizado_celda
 from tkinter import filedialog  
+from datetime import datetime
 
 
 ruta_acta = obtener_ruta_recurso(r"recursos\ACTA DE EXAMEN.docx")
 
 def generar_actas_examen(conexion, modalidad, base_path):
         cursor = conexion.cursor(dictionary=True)
+        mes_actual_numero = datetime.now().month
+        año_actual_numero = datetime.now().year
 
         try:
             
@@ -20,8 +23,8 @@ def generar_actas_examen(conexion, modalidad, base_path):
                 JOIN permiso p ON p.nro = dp.id_permiso 
                 JOIN alumno a ON p.dni = a.dni
                 JOIN materia m ON dp.materia = m.id
-                WHERE m.modalidad = %s
-            ''', (modalidad,))
+                WHERE m.modalidad = %s AND MONTH(p.fechaPermiso) = %s AND YEAR(p.fechaPermiso) = %s
+            ''', (modalidad, mes_actual_numero, año_actual_numero,))
             
             datos = cursor.fetchall()
             

@@ -4,6 +4,7 @@ from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
 from .tabla_permisos import TablaPermisos
 from utils.utils import filtrar_materias
+from datetime import date
 
 
 class RegistroMateriasApp(tk.Toplevel):
@@ -254,7 +255,7 @@ class RegistroMateriasApp(tk.Toplevel):
             if permiso_existente:
                 id_permiso = permiso_existente[0]
             else:
-                cursor.execute("INSERT INTO permiso (dni) VALUES (%s)", (dni,))
+                cursor.execute("INSERT INTO permiso (dni, fechaPermiso) VALUES (%s, %s)", (dni, date.today().isoformat(),))
                 id_permiso = cursor.lastrowid
         
             # Guardar materias

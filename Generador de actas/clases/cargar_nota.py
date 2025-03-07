@@ -48,7 +48,7 @@ class CargarNotaWindow(tk.Toplevel):
             if not (1 <= nota_valor <= 10):
                 raise ValueError
         except ValueError:
-            messagebox.showerror("Error", "Ingrese una nota válida (1-10)")
+            messagebox.showerror("Error", "🚨 Ingrese una nota válida (1-10)")
             return
             
         cursor = self.conexion.cursor()

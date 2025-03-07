@@ -106,9 +106,9 @@ class MainApp(tk.Tk):
         def wrapper():
             try:
                 funcion(*args)
-                self.after(0, lambda: messagebox.showinfo("Éxito", "Operación completada correctamente"))
+                self.after(0, lambda: messagebox.showinfo("Éxito", "✅ Operación completada correctamente"))
             except Exception as e:
-                self.after(0, lambda: messagebox.showerror("Error", f"Error: {str(e)}"))
+                self.after(0, lambda: messagebox.showerror("Error", f"🚨 Error: {str(e)}"))
             finally:
                 self.after(0, self.ocultar_loading)
         

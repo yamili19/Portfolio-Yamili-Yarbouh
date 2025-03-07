@@ -1,6 +1,7 @@
 from tkinter import messagebox, filedialog
 import pandas as pd
 from openpyxl import load_workbook
+from datetime import datetime
 
 def ajustar_ancho_columnas(ruta_excel):
     """Ajusta el ancho de las columnas basado en el contenido"""
@@ -26,6 +27,8 @@ def exportar_a_excel(conexion):
         messagebox.showwarning("Advertencia", "No se seleccionó ninguna ubicación")
         return
     cursor = conexion.cursor()
+    mes_actual_numero = datetime.now().month
+    año_actual_numero = datetime.now().year
 
     try:
         cursor.execute("""
@@ -34,7 +37,8 @@ def exportar_a_excel(conexion):
             JOIN detalle_permiso dp ON p.nro = dp.id_permiso
             JOIN alumno a ON p.dni = a.dni
             JOIN materia m ON dp.materia = m.id
-        """)
+            WHERE MONTH(p.fechaPermiso) = %s AND YEAR(p.fechaPermiso) = %s
+        """, (mes_actual_numero, año_actual_numero,))
         permisos = cursor.fetchall()
         df_permisos = pd.DataFrame(permisos, columns=["Número", "DNI", "Alumno", "Materia", "Curso", "Condición", "Nota"])
 
@@ -50,14 +54,16 @@ def exportar_a_excel(conexion):
                 COUNT(*) AS cantidad_alumnos
             FROM detalle_permiso dp
             JOIN materia m ON dp.materia = m.id
-            GROUP BY m.nombre, m.modalidad, dp.curso, dp.condicion
-        """)
+            JOIN permiso p ON dp.id_permiso = p.nro
+            WHERE MONTH(p.fechaPermiso) = %s AND YEAR(p.fechaPermiso) = %s
+            GROUP BY m.nombre, m.modalidad, dp.curso, dp.condicion;
+        """, (mes_actual_numero, año_actual_numero,))
         actas = cursor.fetchall()
         df_actas = pd.DataFrame(actas, columns=["Materia", "Modalidad", "Curso", "Condición", "Aprobados", 'Desaprobados',"Cantidad de Alumnos"])
 
         # Rutas de los archivos
-        ruta_permisos = f"{path}/permisos.xlsx"
-        ruta_actas = f"{path}/actas.xlsx"
+        ruta_permisos = f"{path}/permisos-{mes_actual_numero}-{año_actual_numero}.xlsx"
+        ruta_actas = f"{path}/actas-{mes_actual_numero}-{año_actual_numero}.xlsx"
 
         # Guardar los archivos con openpyxl como motor
         df_permisos.to_excel(ruta_permisos, index=False, engine='openpyxl')
@@ -70,6 +76,6 @@ def exportar_a_excel(conexion):
 
         messagebox.showinfo("Éxito", f"✅ Archivos exportados correctamente en:\n{path}")
     except Exception as e:
-        messagebox.showerror("Error", f"Error al exportar a Excel:\n{str(e)}")
+        messagebox.showerror("Error", f"🚨 Error al exportar a Excel:\n{str(e)}")
     finally:
         cursor.close()
