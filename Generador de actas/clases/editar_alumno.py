@@ -1,12 +1,14 @@
-import mysql.connector
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
+from modelos.init import Alumno
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
 
 class EditarAlumnoWindow(tk.Toplevel):
-    def __init__(self, parent, conexion):
+    def __init__(self, parent, session):
         super().__init__(parent)
-        self.conexion = conexion
+        self.session = session
         self.title("Editar Alumno")
         self.geometry("500x400")
         self.resizable(False, False)
@@ -135,25 +137,26 @@ class EditarAlumnoWindow(tk.Toplevel):
             self.btn_guardar.state(['disabled'])
 
     def buscar_alumno(self):
-        cursor = self.conexion.cursor()
         dni = self.dni_busqueda.get()
         try:
             if not dni.isdigit():
                 messagebox.showerror("Error", "El DNI debe contener solo números")
                 return
                 
-            cursor.execute("SELECT nombre, modalidad FROM alumno WHERE dni = %s", (dni,))
-            alumno = cursor.fetchone()
+            # Buscar alumno usando ORM
+            alumno = self.session.query(Alumno).get(dni)
             
             if alumno:
-                self.nombre.set(alumno[0])
-                self.modalidad.set(alumno[1])
+                self.nombre.set(alumno.nombre)
+                self.modalidad.set(alumno.modalidad)
                 self.combo_modalidad.configure(style='TCombobox')
             else:
                 messagebox.showerror("Error", "Alumno no encontrado")
                 self.combo_modalidad.configure(style='Error.TCombobox')
-        finally:
-            cursor.close()
+                
+        except SQLAlchemyError as e:
+            messagebox.showerror("Error", f"Error de base de datos: {str(e)}")
+
 
     def guardar_cambios(self):
         dni = self.dni_busqueda.get()
@@ -164,20 +167,26 @@ class EditarAlumnoWindow(tk.Toplevel):
             messagebox.showerror("Error", "DNI inválido")
             return
             
-        cursor = self.conexion.cursor()
         try:
-            cursor.execute("""
-                UPDATE alumno 
-                SET nombre = %s, 
-                    modalidad = %s 
-                WHERE dni = %s
-            """, (nuevo_nombre, nueva_modalidad, dni))
+            # Obtener y actualizar alumno usando ORM
+            alumno = self.session.query(Alumno).get(dni)
             
-            self.conexion.commit()
+            if not alumno:
+                messagebox.showerror("Error", "Alumno no encontrado")
+                return
+                
+            alumno.nombre = nuevo_nombre
+            alumno.modalidad = nueva_modalidad
+            
+            self.session.commit()
             messagebox.showinfo("Éxito", "✅ Datos actualizados correctamente")
             self.destroy()
-        except mysql.connector.Error as err:
-            self.conexion.rollback()
-            messagebox.showerror("Error", f"Error al actualizar: {err}")
-        finally:
-            cursor.close()
+            
+        except IntegrityError as e:
+            self.session.rollback()
+            messagebox.showerror("Error", 
+                f"Error de integridad: {str(e.orig)}")
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            messagebox.showerror("Error", 
+                f"Error de base de datos: {str(e)}")

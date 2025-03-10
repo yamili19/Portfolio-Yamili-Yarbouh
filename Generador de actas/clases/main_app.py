@@ -46,9 +46,9 @@ class LoadingScreen(tk.Toplevel):
         self.progress.start()
 
 class MainApp(tk.Tk):
-    def __init__(self, conexion):
+    def __init__(self, session):
         super().__init__()
-        self.conexion = conexion
+        self.session = session
         self.title("Sistema de Gestión de Exámenes")
         self.geometry("400x500")
         self.config(bg="#f0f0f0")
@@ -106,7 +106,7 @@ class MainApp(tk.Tk):
         def wrapper():
             try:
                 funcion(*args)
-                self.after(0, lambda: messagebox.showinfo("Éxito", "✅ Operación completada correctamente"))
+                #self.after(0, lambda: messagebox.showinfo("Éxito", "✅ Operación completada correctamente"))
             except Exception as e:
                 self.after(0, lambda: messagebox.showerror("Error", f"🚨 Error: {str(e)}"))
             finally:
@@ -116,13 +116,13 @@ class MainApp(tk.Tk):
         threading.Thread(target=wrapper, daemon=True).start()
 
     def iniciar_generar_actas(self):
-        self.ejecutar_con_loading(generar_actas, self.conexion)
+        self.ejecutar_con_loading(generar_actas, self.session)
 
     def iniciar_generar_permisos(self):
-        self.ejecutar_con_loading(generar_permiso, self.conexion)
+        self.ejecutar_con_loading(generar_permiso, self.session)
 
     def iniciar_exportar_excel(self):
-        self.ejecutar_con_loading(exportar_a_excel, self.conexion)
+        self.ejecutar_con_loading(exportar_a_excel, self.session)
 
     def establecer_estilo_botones(self):
         style = ttk.Style()
@@ -155,16 +155,16 @@ class MainApp(tk.Tk):
                         
         
     def abrir_registro_materias(self):
-        RegistroMateriasApp(self, self.conexion)
+        RegistroMateriasApp(self, self.session)
 
     def abrir_agregar_materia(self):
-        AgregarMateriaWindow(self, self.conexion)
+        AgregarMateriaWindow(self, self.session)
 
     def abrir_tabla_permisos(self):
-        TablaPermisos(self, self.conexion)
+        TablaPermisos(self, self.session)
         self.establecer_estilo_botones()  # Restaurar el estilo después de abrir la tabla
     
     def abrir_editar_alumno(self):
-        EditarAlumnoWindow(self, self.conexion)
+        EditarAlumnoWindow(self, self.session)
     
 

@@ -1,16 +1,17 @@
-import mysql.connector
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
 from .tabla_permisos import TablaPermisos
 from utils.utils import filtrar_materias
 from datetime import date
+from modelos.init import Materia, DetallePermiso, Permiso, Alumno
+from sqlalchemy.exc import IntegrityError
 
 
 class RegistroMateriasApp(tk.Toplevel):
-    def __init__(self, parent, conexion):  # Agregar parámetro parent
+    def __init__(self, parent, session):  # Agregar parámetro parent
         super().__init__(parent)
-        self.conexion = conexion
+        self.session = session
         self.title("Registro de Materias")
         self.geometry("1200x1200")
         
@@ -25,7 +26,7 @@ class RegistroMateriasApp(tk.Toplevel):
         self.crear_widgets()
 
     def mostrar_tabla(self):
-        TablaPermisos(self, self.conexion)
+        TablaPermisos(self, self.session)
 
     def validate_dni(self, new_value):
         # Valida que sólo contenga números
@@ -162,19 +163,12 @@ class RegistroMateriasApp(tk.Toplevel):
     
     
     def actualizar_materias(self, event=None):
-        cursor = self.conexion.cursor()
         especialidad = self.especialidad.get()
-        
-        # Obtener materias de la base de datos según la especialidad
-        cursor.execute("SELECT id, nombre FROM materia WHERE modalidad = %s", (especialidad,))
-        self.lista_materias = [f"{row[0]} - {row[1]}" for row in cursor.fetchall()]
-        
-        # Asignar todas las materias al ComboBox inicialmente
+        materias = self.session.query(Materia).filter_by(modalidad=especialidad).all()
+        self.lista_materias = [f"{m.id} - {m.nombre}" for m in materias]
         self.combo_materia['values'] = self.lista_materias
-
-        # Configurar eventos para autocompletar
-        self.combo_materia.unbind('<KeyRelease>')
         self.combo_materia.bind('<KeyRelease>', self.filtrar_materias)
+
 
     def filtrar_materias(self, event=None):
         filtrar_materias(self.combo_materia, self.lista_materias)
@@ -188,9 +182,6 @@ class RegistroMateriasApp(tk.Toplevel):
     
     def validar_campos(self):
         errores = []
-        cursor = self.conexion.cursor()
-        cursor.execute("SELECT modalidad FROM alumno WHERE dni = %s", (self.dni.get(),))
-        resultado = cursor.fetchone()
         
         # Validar campos básicos
         if not self.nombre.get().strip():
@@ -217,13 +208,11 @@ class RegistroMateriasApp(tk.Toplevel):
             messagebox.showerror("Error de validación", mensaje)
             return False
         
-        if not resultado:
-            pass
-        else:
-            modalidad_bd = resultado[0]
-            if modalidad_bd != self.especialidad.get():
-                messagebox.showerror("Error", "La modalidad seleccionada no es la misma que que tiene registrada el alumno.")
-                return False
+        # Validar modalidad usando ORM
+        alumno = self.session.query(Alumno).get(self.dni.get())
+        if alumno and alumno.modalidad != self.especialidad.get():
+            messagebox.showerror("Error", "La modalidad no coincide con el alumno")
+            return False
         
         return True
     
@@ -236,52 +225,66 @@ class RegistroMateriasApp(tk.Toplevel):
             messagebox.showerror("Error", "DNI inválido: Debe contener sólo números y tener al menos 7 dígitos")
             return
         
-        cursor = self.conexion.cursor()
-        try: 
-            # Guardar alumno
-            dni = self.dni.get()
-            nombre = self.nombre.get()
-            curso = self.curso.get()
-            especialidad = self.especialidad.get()
+        try:
+            # Manejo de Alumno
+            alumno = self.session.query(Alumno).get(self.dni.get())
+            if not alumno:
+                alumno = Alumno(
+                    dni=self.dni.get(),
+                    nombre=self.nombre.get().upper(),
+                    modalidad=self.especialidad.get().upper()
+                )
+                self.session.add(alumno)
 
-            
-        
-            cursor.execute("INSERT IGNORE INTO alumno VALUES (%s, %s, %s)", (dni, nombre.upper(), especialidad.upper()))
-        
-            # 2. Obtener o crear permiso
-            cursor.execute("SELECT nro FROM permiso WHERE dni = %s", (dni,))
-            permiso_existente = cursor.fetchone()
+            # Manejo de Permiso
+            permiso = self.session.query(Permiso).filter_by(dni=alumno.dni).first()
+            if not permiso:
+                permiso = Permiso(
+                    dni=alumno.dni,
+                    fechaPermiso=date.today()
+                )
+                self.session.add(permiso)
+                self.session.flush()  # Generar ID del permiso
 
-            if permiso_existente:
-                id_permiso = permiso_existente[0]
-            else:
-                cursor.execute("INSERT INTO permiso (dni, fechaPermiso) VALUES (%s, %s)", (dni, date.today().isoformat(),))
-                id_permiso = cursor.lastrowid
-        
-            # Guardar materias
+            # Agregar detalles
             for materia_id, condicion in self.materias_seleccionadas:
-                cursor.execute("INSERT INTO detalle_permiso (id_permiso, materia, condicion, curso) VALUES (%s, %s, %s, %s)", 
-                         (id_permiso, int(materia_id), condicion, curso))
-            self.conexion.commit()
-        
+                detalle = DetallePermiso(
+                    id_permiso=permiso.nro,
+                    materia=int(materia_id),
+                    condicion=condicion,
+                    curso=self.curso.get()
+                )
+                self.session.add(detalle)
+
+            self.session.commit()
+            
             # Limpiar formulario
-            self.dni.set('')
-            self.nombre.set('')
-            self.especialidad.set('')
-            self.materia.set('')
-            self.condicion.set('')
-            self.curso.set('')
-            self.listbox.delete(0, tk.END)
-            self.materias_seleccionadas = []
-        
-            tk.messagebox.showinfo("Éxito", "✅ Registro guardado correctamente")
-        except mysql.connector.Error as err:
-            self.conexion.rollback()
-            self.conexion.rollback()
-            if err.errno == 1062:  # Código de error para clave duplicada
-                messagebox.showerror("Error", "⚠️ El alumno ya se encuentra inscripto en alguna de las materias seleccionadas.")
-            else:
-                messagebox.showerror("Error", f"🚨 Error de base de datos:\n{err}")
-        finally:
-            cursor.close()
+            self.limpiar_formulario()
+            messagebox.showinfo("Éxito", "Registro guardado correctamente")
+
+        except IntegrityError as e:
+            self.session.rollback()
+            self.manejar_error_integridad(e)
+        except Exception as e:
+            self.session.rollback()
+            messagebox.showerror("Error", f"Error inesperado: {str(e)}")
+
+    def limpiar_formulario(self):
+        # Código para limpiar los campos
+        self.dni.set('')
+        self.nombre.set('')
+        self.especialidad.set('')
+        self.materia.set('')
+        self.condicion.set('')
+        self.curso.set('')
+        self.listbox.delete(0, tk.END)
+        self.materias_seleccionadas = []
+
+    def manejar_error_integridad(self, error):
+        if "Duplicate entry" in str(error.orig):
+            messagebox.showerror("Error", 
+                "El alumno ya está registrado en esta materia")
+        else:
+            messagebox.showerror("Error", 
+                f"Error de base de datos: {error.orig}")
          

@@ -3,35 +3,45 @@ import pandas as pd
 import re
 import os
 from docx.shared import Pt
+from sqlalchemy import extract, and_
+from sqlalchemy.exc import SQLAlchemyError
+from modelos.init import Materia, DetallePermiso, Permiso, Alumno
 from datetime import datetime
-from docx.shared import Pt
 from docx import Document
 from .utils import obtener_ruta_recurso, aplicar_estilo_encabezado, aplicar_estilo_personalizado_celda
 
 ruta_permiso = obtener_ruta_recurso(r"recursos\PERMISOS EXAMEN - 2023.docx")
 
-def generar_permiso_examen(conexion, id_alumno, base_path):
-    mes_actual_numero = datetime.now().month
-    año_actual_numero = datetime.now().year
+def generar_permiso_examen(session, id_alumno, base_path):
     try:
-        cursor = conexion.cursor()
-        # Obtener datos del alumno
-        cursor.execute("""
-            SELECT a.nombre, a.dni, p.nro, m.modalidad, m.nombre, dp.curso 
-            FROM alumno a
-            JOIN permiso p ON a.dni = p.dni
-            JOIN detalle_permiso dp ON p.nro = dp.id_permiso
-            JOIN materia m ON dp.materia = m.id
-            WHERE a.dni = %s AND MONTH(p.fechaPermiso) = %s AND YEAR(p.fechaPermiso) = %s
-        """, (id_alumno, mes_actual_numero, año_actual_numero,))
-        datos = cursor.fetchall()
+        current_date = datetime.now()
+        mes_actual = current_date.month
+        año_actual = current_date.year
+
+        # Consulta ORM corregida
+        datos = session.query(
+            Alumno.nombre,
+            Alumno.dni,
+            Permiso.nro,
+            Materia.modalidad,
+            Materia.nombre,
+            DetallePermiso.curso
+        ).join(Permiso, Alumno.permisos)\
+        .join(DetallePermiso, Permiso.detalles)\
+        .join(Materia, DetallePermiso.materia_rel)\
+        .filter(
+            and_(
+                Alumno.dni == id_alumno,
+                extract('month', Permiso.fechaPermiso) == mes_actual,
+                extract('year', Permiso.fechaPermiso) == año_actual
+            )
+        ).all()
 
         if not datos:
             return
 
+        # Procesamiento del documento (igual que antes)
         doc = Document(ruta_permiso)
-
-        # Extraer datos del primer registro
         nombre_alumno, dni, nro_permiso, plan_estudio, materia, curso = datos[0]
 
         # Reemplazar valores en el documento
@@ -83,7 +93,7 @@ def generar_permiso_examen(conexion, id_alumno, base_path):
         alumno_limpio = re.sub(r'[<>:"/\\|?*]', '', nombre_alumno)
 
         # Crear la carpeta para la modalidad si no existe
-        carpeta_alumno = os.path.join(base_path, f"PERMISO{alumno_limpio.upper()}")
+        carpeta_alumno = os.path.join(base_path, f"PERMISO_{alumno_limpio.upper()}")
         if not os.path.exists(carpeta_alumno):
             os.makedirs(carpeta_alumno)
 
@@ -95,33 +105,31 @@ def generar_permiso_examen(conexion, id_alumno, base_path):
 
         # Guardar el documento
         doc.save(ruta_archivo)
+    except SQLAlchemyError as e:
+        messagebox.showerror("Error", f"Error de base de datos: {str(e)}")
     except Exception as e:
-         messagebox.showerror("Error", "Error al generar permisos.")
+        messagebox.showerror("Error", f"Error inesperado: {str(e)}")
 
-def obtener_alumnos(conexion):
-        cursor = conexion.cursor()
-        # Consulta para obtener los DNI de los permisos
-        query = "SELECT DISTINCT dni FROM permiso"
-        cursor.execute(query)
-
-        # Obtener los resultados en una lista
-        dni_list = [row[0] for row in cursor.fetchall()]
-        return dni_list
+def obtener_alumnos(session):
+    try:
+        # Consulta de DNIs únicos usando ORM
+        return [resultado[0] for resultado in session.query(Permiso.dni).distinct().all()]
+    except SQLAlchemyError as e:
+        messagebox.showerror("Error", f"Error al obtener alumnos: {str(e)}")
+        return []
     
-def generar_permiso(conexion):
-        try:
-            # Pedir ubicación para guardar
-            base_path = filedialog.askdirectory(
-                title="Seleccionar carpeta para guardar los permisos",
-                mustexist=True
-            )
+def generar_permiso(session):
+    try:
+        base_path = filedialog.askdirectory(title="Seleccionar carpeta para guardar los permisos")
+        if not base_path:
+            messagebox.showwarning("Cancelado", "Operación cancelada por el usuario")
+            return
             
-            if not base_path:  # Si el usuario cancela
-                messagebox.showwarning("Operación cancelada", "No se seleccionó ubicación para guardar")
-                return
-            dni_list = obtener_alumnos(conexion)
-            for dni in dni_list:
-                generar_permiso_examen(conexion, dni, base_path)
-            messagebox.showinfo("Éxito", f"✅ Permisos generados y guardados correctamente en {base_path}.")
-        except Exception as e:
-            messagebox.showerror("Error", f"🚨 Error al generar permisos {e}")
+        dni_list = obtener_alumnos(session)
+        for dni in dni_list:
+            generar_permiso_examen(session, dni, base_path)
+            
+        messagebox.showinfo("Éxito", f"✅ Permisos generados en: {base_path}")
+        
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al generar permisos: {str(e)}")

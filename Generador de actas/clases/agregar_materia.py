@@ -1,12 +1,14 @@
-import mysql.connector
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
+from modelos.init import Materia
+from sqlalchemy.exc import IntegrityError  # Añade esta línea en las importaciones
+
 
 class AgregarMateriaWindow(tk.Toplevel):
-    def __init__(self, parent, conexion):
+    def __init__(self, parent, session):
         super().__init__(parent)
-        self.conexion = conexion
+        self.session = session
         self.title("Agregar Materia")
         self.geometry("500x400")
         self.resizable(False, False)
@@ -115,46 +117,42 @@ class AgregarMateriaWindow(tk.Toplevel):
     
 
     def guardar_cambios(self):
-        materia = self.materia.get().upper()
+        materia_nombre = self.materia.get().upper()
         modalidad = self.modalidad.get()
-        
-        if not materia or not modalidad:
+
+        if not materia_nombre or not modalidad:
             messagebox.showerror("Error", "Todos los campos son obligatorios")
             return
-        
-        cursor = self.conexion.cursor()
+
         try:
-            # Verificar si ya existe la combinación materia-modalidad
-            cursor.execute("""
-                SELECT COUNT(*) 
-                FROM materia 
-                WHERE nombre = %s AND modalidad = %s
-            """, (materia, modalidad))
-            
-            if cursor.fetchone()[0] > 0:
-                messagebox.showerror("Error", 
-                    "⚠️ Esta materia ya existe en la modalidad seleccionada")
+            # Verificar existencia usando ORM
+            existe = self.session.query(Materia).filter(
+                Materia.nombre == materia_nombre,
+                Materia.modalidad == modalidad
+            ).first()
+
+            if existe:
+                messagebox.showerror("Error", "⚠️ Esta materia ya existe en la modalidad seleccionada")
                 return
-                
-            # Insertar nueva materia si no existe
-            cursor.execute("""
-                INSERT INTO materia (nombre, modalidad) 
-                VALUES (%s, %s)
-            """, (materia, modalidad))
+
+            # Crear nueva materia con ORM
+            nueva_materia = Materia(
+                nombre=materia_nombre,
+                modalidad=modalidad,
+                correlativa=None  # Se puede asignar luego desde la UI
+            )
+
+            self.session.add(nueva_materia)
+            self.session.commit()
             
-            self.conexion.commit()
-            messagebox.showinfo("Éxito", 
-                "✅ Materia agregada correctamente")
+            messagebox.showinfo("Éxito", "✅ Materia agregada correctamente")
             self.destroy()
-            
-        except mysql.connector.Error as err:
-            self.conexion.rollback()
-            # Capturar error de clave única por si acaso
-            if err.errno == 1062:
-                messagebox.showerror("Error", 
-                    "⚠️ Esta materia ya existe en la modalidad seleccionada.")
-            else:
-                messagebox.showerror("Error", 
-                    f"🚨 Error de base de datos:\n{err}")
-        finally:
-            cursor.close()
+
+        except IntegrityError as e:
+            self.session.rollback()
+            messagebox.showerror("Error", 
+                f"🚨 Error de integridad: {str(e)}")
+        except Exception as e:
+            self.session.rollback()
+            messagebox.showerror("Error", 
+                f"🚨 Error inesperado: {str(e)}")

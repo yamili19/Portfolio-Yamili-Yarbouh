@@ -1,15 +1,18 @@
 import mysql.connector
 import tkinter as tk
 from tkinter import messagebox
+from sqlalchemy.exc import SQLAlchemyError
 from tkinter import ttk  # Para usar Combobox
 from .cargar_nota import CargarNotaWindow
 from utils.utils import filtrar_materias
+from modelos.init import Materia, DetallePermiso, Permiso, Alumno
+
 
 
 class TablaPermisos(tk.Toplevel):
-    def __init__(self, parent, conexion):
+    def __init__(self, parent, session):
         super().__init__(parent)
-        self.conexion = conexion
+        self.session = session
         self.master = parent
         self.title("Registro de Permisos de Examen")
         self.geometry("1280x720")
@@ -212,7 +215,7 @@ class TablaPermisos(tk.Toplevel):
             
         item = self.tree.item(selected[0])
         valores = item['values']
-        CargarNotaWindow(self, self.conexion, valores[7], valores[8])
+        CargarNotaWindow(self, self.session, valores[7], valores[8])
         self.cargar_datos()
 
     def _crear_menu_contextual(self):
@@ -250,16 +253,11 @@ class TablaPermisos(tk.Toplevel):
             self.menu.post(event.x_root, event.y_root)
         
     def cargar_materias(self):
-        cursor = self.conexion.cursor()
-
         try:
-            cursor.execute("SELECT DISTINCT nombre FROM materia")
-            self.materias = [row[0] for row in cursor.fetchall()]
+            self.materias = [m.nombre for m in self.session.query(Materia.nombre).distinct().all()]
             self.combo_materias['values'] = self.materias
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al cargar las materias: {e}")
-        finally:
-            cursor.close()
+        except SQLAlchemyError as e:
+            messagebox.showerror("Error", f"Error al cargar las materias: {str(e)}")
 
     def limpiar_filtros(self):
         self.filtro_dni.set('')
@@ -281,33 +279,30 @@ class TablaPermisos(tk.Toplevel):
             
         item = self.tree.item(selected[0])
         valores = item['values']
-        cursor = self.conexion.cursor()
-
+        
         try:
-            # Eliminar el detalle_permiso
-            cursor.execute('''
-                DELETE FROM detalle_permiso
-                WHERE id_permiso = %s 
-                AND materia = %s 
-            ''', (valores[7], valores[8]))
-
-            # Verificar si quedan otros detalles para este permiso
-            cursor.execute("SELECT COUNT(*) FROM detalle_permiso WHERE id_permiso = %s", (valores[7],))
-            count = cursor.fetchone()[0]
-
-            # Si no hay más detalles, eliminar el permiso
-            if count == 0:
-                cursor.execute("DELETE FROM permiso WHERE nro = %s", (valores[7],))
-
-            self.conexion.commit()
+            # Obtener el detalle a eliminar
+            detalle = self.session.query(DetallePermiso).filter(
+                DetallePermiso.id_permiso == valores[7],
+                DetallePermiso.materia == valores[8]
+            ).one()
+            
+            # Eliminar detalle
+            self.session.delete(detalle)
+            
+            # Verificar si quedan otros detalles
+            permiso = self.session.query(Permiso).get(valores[7])
+            if not permiso.detalles:  # Si no hay más detalles
+                self.session.delete(permiso)
+            
+            self.session.commit()
             self.cargar_datos()
             messagebox.showinfo("Éxito", "Registro eliminado correctamente")
             
-        except mysql.connector.Error as err:
-            self.conexion.rollback()
-            messagebox.showerror("Error", f"No se pudo eliminar: {err}")
-        finally:
-            cursor.close()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            messagebox.showerror("Error", f"No se pudo eliminar: {str(e)}")
+
     
     def modificar_registro(self):
         selected = self.tree.selection()
@@ -324,7 +319,7 @@ class TablaPermisos(tk.Toplevel):
         edit_win.geometry("500x400")
         edit_win.resizable(False, False)
 
-         # Frame principal
+        # Frame principal
         main_frame = ttk.Frame(edit_win, style='TFrame')
         main_frame.pack(padx=20, pady=20, fill='both', expand=True)
 
@@ -340,20 +335,20 @@ class TablaPermisos(tk.Toplevel):
         curso = tk.StringVar(value=valores[4])
         condicion = tk.StringVar(value=valores[5])
 
-        # Función para actualizar materias
+        # Función para actualizar materias con ORM
         def actualizar_materias_combo(event=None):
-            cursor = self.conexion.cursor()
-            materias_modalidad = []
             try:
-                cursor.execute("SELECT id, nombre FROM materia WHERE modalidad = %s", 
-                            (modalidad.get(),))
-                materias_modalidad = [f"{row[0]} - {row[1]}" for row in cursor.fetchall()]
+                materias = self.session.query(Materia).filter(
+                    Materia.modalidad == modalidad.get()
+                ).all()
+                
+                materias_modalidad = [f"{m.id} - {m.nombre}" for m in materias]
                 combo_materia['values'] = materias_modalidad
-            except Exception as e:
-                messagebox.showerror("Error", f"Error al cargar las materias: {e}")
-            finally:
-                cursor.close()
-            return materias_modalidad
+                return materias_modalidad
+                
+            except SQLAlchemyError as e:
+                messagebox.showerror("Error", f"Error al cargar las materias: {str(e)}")
+                return []
 
         # Configurar grid
         rows = [
@@ -397,47 +392,41 @@ class TablaPermisos(tk.Toplevel):
                                             style='Filtro.TCombobox')
                 combo_condicion.grid(row=i, column=1, padx=10, pady=8, sticky='ew')
 
-        # Definir la función guardar_cambios PRIMERO
         def guardar_cambios():
-            cursor = self.conexion.cursor()
-
             try:
-                # Extraer ID de materia
-                materia_id = materia.get().split(" - ")[0]
-                
-                cursor.execute('''
-                    UPDATE detalle_permiso 
-                    SET condicion = %s, 
-                        materia = %s,
-                        curso = %s
-                    WHERE id_permiso = %s 
-                    AND materia = %s 
-                ''', (condicion.get(), 
-                    materia_id,
-                    curso.get(),
-                    valores[7],  # id_permiso
-                    valores[8])) # materia_id original
-                
-                self.conexion.commit()               
+                # Obtener el detalle del permiso usando ORM
+                detalle = self.session.query(DetallePermiso).filter(
+                    DetallePermiso.id_permiso == valores[7],
+                    DetallePermiso.materia == valores[8]
+                ).one()
 
+                # Actualizar los campos
+                detalle.condicion = condicion.get()
+                detalle.materia = int(materia.get().split(" - ")[0])
+                detalle.curso = curso.get()
+
+                self.session.commit()
+                
                 self.cargar_datos()
                 edit_win.destroy()
                 messagebox.showinfo("Éxito", "Registro actualizado correctamente")
                 
-            except mysql.connector.Error as err:
-                self.conexion.rollback()
-                messagebox.showerror("Error", f"Error al actualizar: {err}")
-            finally:
-                cursor.close()
+            except SQLAlchemyError as e:
+                self.session.rollback()
+                messagebox.showerror("Error", f"Error al actualizar: {str(e)}")
+            except ValueError:
+                messagebox.showerror("Error", "Formato de materia inválido")
+            except Exception as e:
+                messagebox.showerror("Error", f"Error inesperado: {str(e)}")
 
-        # Ahora crear el botón que referencia la función
+        # Botón de guardar
         btn_guardar = ttk.Button(main_frame, 
                                 text="💾 Guardar Cambios", 
                                 style='Buscar.TButton',
-                                command=guardar_cambios)  # La función ya está definida
+                                command=guardar_cambios)
         btn_guardar.grid(row=7, column=0, columnspan=2, pady=20, ipadx=20)
 
-         # Configurar estilos adicionales
+        # Estilos
         self.style.configure('Titulo.TLabel', 
                         foreground='#2d3748', 
                         background='#f0f2f5')
@@ -448,56 +437,53 @@ class TablaPermisos(tk.Toplevel):
                             font=('Arial', 10))
 
     def cargar_datos(self):
-        cursor = self.conexion.cursor()
         try:
-            # Construir consulta con filtros
-            query = '''
-                SELECT 
-                    a.dni,
-                    a.nombre,
-                    m.nombre,
-                    m.modalidad,
-                    dp.curso,
-                    dp.condicion,
-                    dp.nota,
-                    p.nro,
-                    m.id,
-                    dp.curso
-                FROM alumno a
-                JOIN permiso p ON a.dni = p.dni
-                JOIN detalle_permiso dp ON p.nro = dp.id_permiso
-                JOIN materia m ON dp.materia = m.id
-                WHERE 1=1
-            '''
-            
-            params = []
-            
+            # Construir consulta con ORM
+            query = self.session.query(
+                Alumno.dni,
+                Alumno.nombre,
+                Materia.nombre,
+                Materia.modalidad,
+                DetallePermiso.curso,
+                DetallePermiso.condicion,
+                DetallePermiso.nota,
+                Permiso.nro,
+                DetallePermiso.materia,
+                DetallePermiso.curso
+            ).join(Permiso, Alumno.dni == Permiso.dni)\
+             .join(DetallePermiso, Permiso.nro == DetallePermiso.id_permiso)\
+             .join(Materia, DetallePermiso.materia_rel)
+
             # Aplicar filtros
             if self.filtro_dni.get():
-                query += " AND a.dni LIKE %s"
-                params.append(f"%{self.filtro_dni.get()}%")
+                query = query.filter(Alumno.dni.contains(self.filtro_dni.get()))
             
             if self.filtro_nombre.get():
-                query += " AND a.nombre LIKE %s"
-                params.append(f"%{self.filtro_nombre.get().upper()}%")
+                query = query.filter(Alumno.nombre.ilike(f"%{self.filtro_nombre.get()}%"))
             
             if self.filtro_materia.get():
-                query += " AND m.nombre = %s"
-                params.append(self.filtro_materia.get())
-            
-            query += " ORDER BY a.nombre"
-            cursor = self.conexion.cursor()
-            cursor.execute(query, params)
-            
-            # Limpiar tabla existente
+                query = query.filter(Materia.nombre == self.filtro_materia.get())
+
+            resultados = query.order_by(Alumno.nombre).all()
+
+            # Limpiar tabla
             for item in self.tree.get_children():
                 self.tree.delete(item)
             
             # Insertar nuevos datos
-            for row in cursor.fetchall():
-                self.tree.insert('', 'end', values=row)
+            for row in resultados:
+                self.tree.insert('', 'end', values=(
+                    row[0],  # DNI
+                    row[1],  # Nombre
+                    row[2],  # Materia (nombre)
+                    row[3],  # Especialidad (modalidad)
+                    row[4],  # Curso
+                    row[5],  # Condición
+                    row[6],  # Nota
+                    row[7],  # id_permiso
+                    row[8],  # materia_id (ID de Materia)
+                    row[9]   # curso_original (si es necesario)
+    ))
                 
-        except mysql.connector.Error as err:
-            messagebox.showerror("Error", f"Error al cargar datos:\n{err}")
-        finally:
-            cursor.close()
+        except SQLAlchemyError as e:
+            messagebox.showerror("Error", f"Error al cargar datos:\n{str(e)}")

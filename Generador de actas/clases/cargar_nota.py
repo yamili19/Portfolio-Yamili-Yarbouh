@@ -1,10 +1,12 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-import mysql.connector
+from modelos.init import DetallePermiso
+from sqlalchemy.exc import SQLAlchemyError
+
 class CargarNotaWindow(tk.Toplevel):
-    def __init__(self, parent, conexion, id_permiso, materia_id):
+    def __init__(self, parent, session, id_permiso, materia_id):
         super().__init__(parent)
-        self.conexion = conexion
+        self.session = session
         self.id_permiso = id_permiso
         self.materia_id = materia_id
         self.title("Cargar Nota")
@@ -28,19 +30,18 @@ class CargarNotaWindow(tk.Toplevel):
         self.cargar_nota_actual()
     
     def cargar_nota_actual(self):
-        cursor = self.conexion.cursor()
         try:
-            cursor.execute('''
-                SELECT nota FROM detalle_permiso 
-                WHERE id_permiso = %s AND materia = %s
-            ''', (self.id_permiso, self.materia_id))
-            resultado = cursor.fetchone()
-            if resultado and resultado[0]:
-                self.nota.set(str(resultado[0]))
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al cargar las notas: {e}")
-        finally:
-            cursor.close()
+            # Buscar el detalle usando ORM
+            detalle = self.session.query(DetallePermiso).filter(
+                DetallePermiso.id_permiso == self.id_permiso,
+                DetallePermiso.materia_id == self.materia_id
+            ).first()
+            
+            if detalle and detalle.nota:
+                self.nota.set(str(detalle.nota))
+                
+        except SQLAlchemyError as e:
+            messagebox.showerror("Error", f"Error al cargar las notas: {str(e)}")
     
     def guardar_nota(self):
         try:
@@ -51,19 +52,20 @@ class CargarNotaWindow(tk.Toplevel):
             messagebox.showerror("Error", "🚨 Ingrese una nota válida (1-10)")
             return
             
-        cursor = self.conexion.cursor()
         try:
-            cursor.execute('''
-                UPDATE detalle_permiso 
-                SET nota = %s 
-                WHERE id_permiso = %s AND materia = %s
-            ''', (nota_valor, self.id_permiso, self.materia_id))
-            self.conexion.commit()
+            # Obtener y actualizar el registro usando ORM
+            detalle = self.session.query(DetallePermiso).filter(
+                DetallePermiso.id_permiso == self.id_permiso,
+                DetallePermiso.materia_id == self.materia_id
+            ).one()
+            
+            detalle.nota = nota_valor
+            self.session.commit()
+            
             messagebox.showinfo("Éxito", "✅ Nota actualizada correctamente")
-            self.master.cargar_datos()
+            self.master.cargar_datos()  # Asumiendo que existe este método
             self.destroy()
-        except mysql.connector.Error as err:
-            self.conexion.rollback()
-            messagebox.showerror("Error", f"🚨 No se pudo guardar la nota: {err}")
-        finally:
-            cursor.close()
+            
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            messagebox.showerror("Error", f"🚨 No se pudo guardar la nota: {str(e)}")

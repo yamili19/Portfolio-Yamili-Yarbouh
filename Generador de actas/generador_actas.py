@@ -1,19 +1,20 @@
 from clases.main_app import MainApp
-import mysql.connector
-
+# Agrega estas importaciones al inicio del archivo
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from modelos.init import Base
 def main():
-    conexion = mysql.connector.connect(
-        host="sql10.freesqldatabase.com",
-        user="sql10763670",
-        password="ZLADxTPaZh",
-        database="sql10763670",
-        port=3306
-    )
-    
-    app = MainApp(conexion)
+    # Configurar SQLAlchemy
+    DATABASE_URL = "mysql+mysqlconnector://sql10763670:ZLADxTPaZh@sql10.freesqldatabase.com:3306/sql10763670"
+    engine = create_engine(DATABASE_URL)
+    Base.metadata.create_all(engine)  # Crear tablas si no existen
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    app = MainApp(session)
     app.mainloop()
     
-    conexion.close()
+    session.close()
 
 if __name__ == "__main__":
     main()
