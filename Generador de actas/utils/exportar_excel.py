@@ -126,8 +126,6 @@ def exportar_a_excel(session):
             )
             ajustar_ancho_columnas(ruta_actas)
 
-            messagebox.showinfo("Éxito", f"✅ Archivos exportados correctamente en:\n{path}")
-
         except PermissionError:
             messagebox.showerror("Error", "❌ Cierre los archivos Excel antes de guardar")
         except Exception as e:
