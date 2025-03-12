@@ -1,0 +1,34 @@
+/* Solo para impresión */
+@media print {
+  /* Ocultar todo menos la clase reporte-imprimible */
+  body * {
+    visibility: hidden;
+  }
+
+  .reporte-imprimible,
+  .reporte-imprimible * {
+    visibility: visible;
+    -webkit-print-color-adjust: exact; /* Para Chrome y Safari */
+    print-color-adjust: exact; /* Para Firefox */
+  }
+
+  .reporte-imprimible {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(
+      100% - 10mm
+    ); /* Restar los márgenes para mantener el contenido dentro de los límites */
+    height: auto;
+    margin: 0 5mm; /* Márgenes izquierdo y derecho de 5mm */
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ocultar encabezados y pies de página en la impresión */
+  @page {
+    margin: 0; /* Esto puede ayudar a reducir márgenes no deseados */
+  }
+}

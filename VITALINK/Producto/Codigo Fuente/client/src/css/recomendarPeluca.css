@@ -1,0 +1,62 @@
+.lead {
+  text-align: center;
+}
+
+.titulo-con-imagen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.titulo-con-imagen h1 {
+  margin-right: 10px; /* Espacio entre el título y la imagen */
+}
+
+.img-animacion {
+  width: 50px; /* Ajustar el tamaño de la imagen */
+  height: auto;
+  animation: zoomIn 1s ease-in-out;
+}
+
+.tipo-cara {
+  transition: opacity 0.5s ease-in-out;
+}
+
+@keyframes zoomIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.tipo-cara-animation {
+  transition: opacity 0.5s ease-in-out; /* Para una transición suave */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px); /* Mueve ligeramente hacia abajo al aparecer */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0); /* Regresa a su posición original */
+  }
+}
+
+.tipo-cara-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.text-center-rp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}

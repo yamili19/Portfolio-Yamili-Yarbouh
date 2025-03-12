@@ -1,0 +1,48 @@
+/* Estilo general para el contenedor de la tabla */
+.table-container {
+  border: 2px solid #d5006d; /* Borde del contenedor */
+  padding: 20px; /* Espaciado interno */
+  border-radius: 10px; /* Bordes redondeados */
+  background-color: #ffe4e1; /* Color de fondo */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+/* Estilo general para la tabla */
+.table {
+  width: 100%; /* Asegura que la tabla ocupe el 100% del ancho del contenedor */
+  border-collapse: collapse; /* Evita bordes duplicados */
+  table-layout: auto; /* Cambiado a auto para permitir que los títulos se ajusten según su contenido */
+}
+
+.table th,
+.table td {
+  padding: 10px; /* Espacio interno */
+  text-align: center; /* Cambiado a centrado */
+  overflow: hidden; /* Oculta el desbordamiento */
+  text-overflow: ellipsis; /* Muestra '...' si el texto es demasiado largo */
+  white-space: nowrap; /* Evita que el texto se envuelva */
+}
+
+/* Encabezado de la tabla */
+.table th {
+  background-color: #ffe4e1; /* Color de fondo del encabezado */
+  color: #d5006d; /* Color del texto */
+}
+
+/* Fila de la tabla */
+.table tbody tr:nth-child(even) {
+  background-color: #f8f9fa; /* Color de fondo para filas pares */
+}
+
+/* Ajustes responsivos */
+@media (max-width: 768px) {
+  .table {
+    display: block; /* Cambia la tabla a un bloque para permitir el desplazamiento */
+    overflow-x: auto; /* Habilita el desplazamiento horizontal */
+  }
+
+  .table th,
+  .table td {
+    white-space: nowrap; /* Asegura que el texto no se envuelva */
+  }
+}

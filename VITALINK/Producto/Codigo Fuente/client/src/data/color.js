@@ -1,0 +1,17 @@
+export const colors = [
+  { nombre: "Rojo", valor: "#FF0000" },
+  { nombre: "Azul", valor: "#0000FF" },
+  { nombre: "Verde", valor: "#00FF00" },
+  { nombre: "Amarillo", valor: "#FFFF00" },
+  { nombre: "Negro", valor: "#000000" },
+  { nombre: "Rosa", valor: "#FFC0CB" },
+  { nombre: "Blanco", valor: "#FFFFFF" },
+  { nombre: "Gris", valor: "#808080" },
+  { nombre: "Marrón", valor: "#8B4513" },
+  { nombre: "Naranja", valor: "#FFA500" },
+  { nombre: "Morado", valor: "#800080" },
+  { nombre: "Celeste", valor: "#87CEEB" },
+  { nombre: "Violeta", valor: "#EE82EE" },
+  { nombre: "Turquesa", valor: "#40E0D0" },
+  { nombre: "Fucsia", valor: "#FF00FF" },
+];

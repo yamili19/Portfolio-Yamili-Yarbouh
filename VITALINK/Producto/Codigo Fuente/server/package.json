@@ -1,0 +1,31 @@
+{
+  "name": "crud-peluquerias",
+  "version": "1.0.0",
+  "description": "crud de peluquerias",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jonathan Muñoz",
+  "license": "ISC",
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.21.0",
+    "axios": "^1.7.9",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-validator": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mariadb": "^3.3.0",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.7.0",
+    "nodemailer": "^6.9.14",
+    "sequelize": "^6.37.3",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.3"
+  }
+}
