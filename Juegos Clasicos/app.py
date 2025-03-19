@@ -10,9 +10,9 @@ def index():
 def snake():
     return render_template('snake.html')
 
-@app.route('/pinball')
+@app.route('/tenis')
 def pinball():
-    return render_template('pinball.html')
+    return render_template('tenis.html')
 
 @app.route('/buscaminas')
 def buscaminas():
