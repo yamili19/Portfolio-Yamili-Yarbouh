@@ -1,14 +1,26 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pinball</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        canvas {
+            background: radial-gradient(circle, #222 0%, #000 100%);
+            border: 2px solid white;
+        }
+    </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="600" height="400"></canvas>
-    <div id="scoreBoard">
-        <span id="playerScore">0</span> - <span id="computerScore">0</span>
-    </div>
+    <canvas id="gameCanvas" width="500" height="700"></canvas>
     <script src="{{ url_for('static', filename='js/pinball.js') }}"></script>
 </body>
 </html>

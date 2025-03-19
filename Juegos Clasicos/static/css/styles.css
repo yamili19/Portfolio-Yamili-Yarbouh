@@ -39,8 +39,12 @@ h1 {
     background-color: #4CAF50;
 }
 
-.game-button.pinball {
+.game-button.tenis {
     background-color: #2196F3;
+}
+
+.game-button.pinball {
+    background-color: #FFC107;
 }
 
 .game-button.buscaminas{

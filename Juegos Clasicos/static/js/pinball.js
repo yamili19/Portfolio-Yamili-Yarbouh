@@ -1,133 +1,198 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-// Configuración del juego
-const PADDLE_WIDTH = 10;
-const PADDLE_HEIGHT = 60;
-const BALL_SIZE = 10;
-const INITIAL_SPEED = 5.5;
-const MAX_SPEED = 12;
+const GRAVITY = 0.1; // Gravedad reducida
+const DAMPING = 0.9; // Amortiguamiento aumentado
+const FLIPPER_POWER = 20; // Fuerza de los flippers reducida
+const FLIPPER_LENGTH = 80;
+const FLIPPER_HEIGHT = 10;
+const BUMPER_BOOST = 1.5; // Aumento de velocidad al chocar con un bumper
+const MAX_BALL_SPEED = 8; // Velocidad máxima de la bola reducida
 
-let playerY = canvas.height / 2 - PADDLE_HEIGHT / 2;
-let computerY = canvas.height / 2 - PADDLE_HEIGHT / 2;
-let ballX = canvas.width / 2;
-let ballY = canvas.height / 2;
-let ballSpeedX = INITIAL_SPEED;
-let ballSpeedY = INITIAL_SPEED;
-let playerScore = 0;
-let computerScore = 0;
-let playerSpeed = 0;
-const MOVE_SPEED = 12;
-const FRICTION = 0.8;
+// Bola
+let ball = {
+    x: canvas.width / 2,
+    y: canvas.height - 150,
+    radius: 10,
+    dx: 1 + Math.random() * 2, // Velocidad inicial aleatoria
+    dy: -3, // Velocidad vertical inicial reducida
+    color: "white"
+};
 
-// Controles
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'w') playerSpeed = -MOVE_SPEED;
-    if (e.key === 's') playerSpeed = MOVE_SPEED;
+// Flippers con el punto de giro en el lado externo
+let leftFlipper = {
+    x: 120, // Punto de giro externo (lado izquierdo)
+    y: canvas.height - 50,
+    angle: 0
+};
+
+let rightFlipper = {
+    x: 380, // Punto de giro externo (lado derecho)
+    y: canvas.height - 50,
+    angle: 0
+};
+
+// Bumpers
+let bumpers = [
+    { x: 150, y: 200, radius: 20, color: "red" },
+    { x: 250, y: 150, radius: 20, color: "blue" },
+    { x: 350, y: 200, radius: 20, color: "yellow" }
+];
+
+// Teclado
+let keys = {};
+
+document.addEventListener("keydown", (e) => {
+    keys[e.key] = true;
 });
 
-document.addEventListener('keyup', (e) => {
-    if (e.key === 'w' || e.key === 's') playerSpeed = 0;
+document.addEventListener("keyup", (e) => {
+    keys[e.key] = false;
 });
 
 function update() {
-    // Movimiento del jugador
-    playerY += playerSpeed;
-    playerY = Math.max(0, Math.min(canvas.height - PADDLE_HEIGHT, playerY));
+    // Movimiento de la bola
+    ball.dy += GRAVITY;
+    ball.x += ball.dx;
+    ball.y += ball.dy;
 
-    // IA de la computadora
-    const computerCenter = computerY + PADDLE_HEIGHT / 2;
-    const ballCenter = ballY + BALL_SIZE / 2;
-
-    if (computerCenter < ballCenter - 35) computerY += 6;
-    if (computerCenter > ballCenter + 35) computerY -= 6;
-    computerY = Math.max(0, Math.min(canvas.height - PADDLE_HEIGHT, computerY));
-
-    // Movimiento de la pelota
-    ballX += ballSpeedX;
-    ballY += ballSpeedY;
-
-    // Rebotes en los bordes
-    if (ballY < 0 || ballY > canvas.height - BALL_SIZE) {
-        ballSpeedY *= -1;
+    // Rebote en paredes laterales
+    if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+        ball.dx *= -DAMPING;
     }
 
-    // Colisiones con las paletas
-    if (
-        ballX <= PADDLE_WIDTH &&
-        ballY + BALL_SIZE >= playerY &&
-        ballY <= playerY + PADDLE_HEIGHT
-    ) {
-        ballSpeedX = Math.abs(ballSpeedX);
+    // Rebote en el techo
+    if (ball.y - ball.radius < 0) {
+        ball.dy *= -DAMPING;
     }
 
-    if (
-        ballX >= canvas.width - PADDLE_WIDTH - BALL_SIZE &&
-        ballY + BALL_SIZE >= computerY &&
-        ballY <= computerY + PADDLE_HEIGHT
-    ) {
-        ballSpeedX = -Math.abs(ballSpeedX);
+    // Verificar colisión con bumpers
+    bumpers.forEach((bumper) => {
+        let dist = Math.hypot(ball.x - bumper.x, ball.y - bumper.y);
+        if (dist < ball.radius + bumper.radius) {
+            // Calcular el ángulo de colisión
+            let angle = Math.atan2(ball.y - bumper.y, ball.x - bumper.x);
+            // Aplicar un rebote en función del ángulo
+            ball.dx = Math.cos(angle) * BUMPER_BOOST;
+            ball.dy = Math.sin(angle) * BUMPER_BOOST;
+            ball.color = bumper.color;
+        }
+    });
+
+    // Movimiento de flippers
+    if (keys["z"]) leftFlipper.angle = -FLIPPER_POWER;
+    else leftFlipper.angle = 0;
+
+    if (keys["m"]) rightFlipper.angle = FLIPPER_POWER;
+    else rightFlipper.angle = 0;
+
+    // Verificar colisión con flippers
+    checkFlipperCollision(leftFlipper, -1);
+    checkFlipperCollision(rightFlipper, 1);
+
+    // Limitar la velocidad máxima de la bola
+    let speed = Math.hypot(ball.dx, ball.dy);
+    if (speed > MAX_BALL_SPEED) {
+        ball.dx = (ball.dx / speed) * MAX_BALL_SPEED;
+        ball.dy = (ball.dy / speed) * MAX_BALL_SPEED;
     }
 
-    // Puntuación
-    if (ballX < 0) {
-        computerScore++;
+    // Si la bola cae fuera del área de juego
+    if (ball.y > canvas.height) {
         resetBall();
     }
-    if (ballX > canvas.width) {
-        playerScore++;
-        ballSpeedX *= 1.1;
-        ballSpeedY *= 1.1;
-        ballSpeedX = Math.min(MAX_SPEED, Math.max(-MAX_SPEED, ballSpeedX));
-        ballSpeedY = Math.min(MAX_SPEED, Math.max(-MAX_SPEED, ballSpeedY));
-        resetBall();
-    }
+}
 
-    // Actualizar marcador
-    document.getElementById('playerScore').textContent = playerScore;
-    document.getElementById('computerScore').textContent = computerScore;
+function checkFlipperCollision(flipper, direction) {
+    // Calcular la posición de la punta del flipper
+    let flipperEndX = flipper.x - FLIPPER_LENGTH * Math.cos((flipper.angle * Math.PI) / 180);
+    let flipperEndY = flipper.y - FLIPPER_LENGTH * Math.sin((flipper.angle * Math.PI) / 180);
 
-    // Verificar ganador
-    if (playerScore >= 5 || computerScore >= 5) {
-        alert(playerScore >= 5 ? '¡Jugador Gana!' : '¡Computadora Gana!');
-        resetGame();
+    // Calcular el vector del flipper
+    let flipperVectorX = flipperEndX - flipper.x;
+    let flipperVectorY = flipperEndY - flipper.y;
+
+    // Calcular el vector de la bola al punto de giro del flipper
+    let ballVectorX = ball.x - flipper.x;
+    let ballVectorY = ball.y - flipper.y;
+
+    // Calcular la distancia perpendicular entre la bola y el flipper
+    let crossProduct = flipperVectorX * ballVectorY - flipperVectorY * ballVectorX;
+    let distance = Math.abs(crossProduct) / Math.hypot(flipperVectorX, flipperVectorY);
+
+    // Verificar si la bola está dentro del área del flipper
+    if (distance < ball.radius + FLIPPER_HEIGHT / 2) {
+        // Calcular el punto más cercano en el flipper a la bola
+        let t = (ballVectorX * flipperVectorX + ballVectorY * flipperVectorY) / (flipperVectorX * flipperVectorX + flipperVectorY * flipperVectorY);
+        t = Math.max(0, Math.min(1, t)); // Asegurar que t esté entre 0 y 1
+        let closestX = flipper.x + t * flipperVectorX;
+        let closestY = flipper.y + t * flipperVectorY;
+
+        // Verificar si la bola está cerca del punto más cercano
+        let distToClosest = Math.hypot(ball.x - closestX, ball.y - closestY);
+        if (distToClosest < ball.radius + FLIPPER_HEIGHT / 2) {
+            // Calcular el ángulo de colisión
+            let angle = Math.atan2(ball.y - closestY, ball.x - closestX);
+
+            // Aplicar un rebote en función del ángulo
+            ball.dx = Math.cos(angle) * FLIPPER_POWER / 10;
+            ball.dy = Math.sin(angle) * FLIPPER_POWER / 10;
+
+            // Añadir un impulso en la dirección del flipper
+            ball.dx += direction * (FLIPPER_POWER / 5);
+            ball.dy -= 2; // Impulso hacia arriba
+        }
     }
+}
+function resetBall() {
+    // Reiniciar la posición y velocidad de la bola
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height - 150;
+    ball.dx = 1 + Math.random() * 2; // Velocidad inicial aleatoria
+    ball.dy = -3; // Velocidad vertical inicial reducida
+    ball.color = "white";
 }
 
 function draw() {
-    // Limpiar canvas
-    ctx.fillStyle = 'black';
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Fondo oscuro
+    ctx.fillStyle = "#111";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Dibujar paletas
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, playerY, PADDLE_WIDTH, PADDLE_HEIGHT);
-    ctx.fillRect(canvas.width - PADDLE_WIDTH, computerY, PADDLE_WIDTH, PADDLE_HEIGHT);
+    // Dibujar bola
+    ctx.fillStyle = ball.color;
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Dibujar pelota
-    ctx.fillStyle = 'red';
-    ctx.fillRect(ballX, ballY, BALL_SIZE, BALL_SIZE);
+    // Dibujar bumpers
+    bumpers.forEach((bumper) => {
+        ctx.fillStyle = bumper.color;
+        ctx.beginPath();
+        ctx.arc(bumper.x, bumper.y, bumper.radius, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    // Dibujar flippers con rotación desde la base interna
+    drawFlipper(leftFlipper, -1);
+    drawFlipper(rightFlipper, 1);
 }
 
-function resetBall() {
-    ballX = canvas.width / 2;
-    ballY = canvas.height / 2;
-    ballSpeedX = INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
-    ballSpeedY = INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
+function drawFlipper(flipper, direction) {
+    ctx.fillStyle = "white";
+    ctx.save();
+    ctx.translate(flipper.x, flipper.y); // Punto de giro (externo)
+    ctx.rotate((flipper.angle * Math.PI) / 180); // Rotar desde el punto de giro
+    // Dibujar el flipper desde el punto de giro hacia adentro
+    ctx.fillRect(-FLIPPER_LENGTH * direction, -FLIPPER_HEIGHT / 2, FLIPPER_LENGTH * direction, FLIPPER_HEIGHT);
+    ctx.restore();
 }
 
-function resetGame() {
-    playerScore = 0;
-    computerScore = 0;
-    resetBall();
-}
-
-// Bucle del juego
 function gameLoop() {
     update();
     draw();
     requestAnimationFrame(gameLoop);
 }
 
-// Iniciar el juego
 gameLoop();
