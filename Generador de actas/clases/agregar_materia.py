@@ -3,6 +3,7 @@ from tkinter import messagebox
 from tkinter import ttk  # Para usar Combobox
 from modelos.init import Materia
 from sqlalchemy.exc import IntegrityError  # Añade esta línea en las importaciones
+from utils.utils import filtrar_materias
 
 
 class AgregarMateriaWindow(tk.Toplevel):
@@ -22,6 +23,7 @@ class AgregarMateriaWindow(tk.Toplevel):
         # Variables
         self.materia = tk.StringVar()
         self.modalidad = tk.StringVar()
+        self.correlativa = tk.StringVar()
         self._configurar_validacion()  # Activar validación automática
         
         # Frame principal
@@ -91,7 +93,7 @@ class AgregarMateriaWindow(tk.Toplevel):
     def _crear_seccion_edicion(self, parent):
         """Crea la sección de edición"""
         frame_edicion = ttk.LabelFrame(parent, 
-                                     text="Datos del Alumno", 
+                                     text="Datos de la materia",
                                      style='Seccion.TLabelframe')
         frame_edicion.grid(row=2, column=0, columnspan=2, pady=10, sticky='ew')
         
@@ -113,8 +115,21 @@ class AgregarMateriaWindow(tk.Toplevel):
                                           style='TCombobox',
                                           state='readonly')
         self.combo_modalidad.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
+        self.combo_modalidad.bind("<<ComboboxSelected>>", self.actualizar_materias)
 
-    
+        ttk.Label(frame_edicion, text="Correlativa:", style='Filtro.TLabel').grid(row=2, column=0, padx=5, pady=5)
+        self.combo_correlativa = ttk.Combobox(frame_edicion, textvariable=self.correlativa, width=35)
+        self.combo_correlativa.grid(row=2, column=1, padx=5, pady=5)
+
+    def actualizar_materias(self, event=None):
+        modalidad = self.modalidad.get()
+        materias = self.session.query(Materia).filter_by(modalidad=modalidad).all()
+        self.lista_materias = [f"{m.id} - {m.nombre}" for m in materias]
+        self.combo_correlativa['values'] = self.lista_materias
+        self.combo_correlativa.bind('<KeyRelease>', self.filtrar_materias)
+
+    def filtrar_materias(self, event=None):
+        filtrar_materias(self.correlativa, self.lista_materias)
 
     def guardar_cambios(self):
         materia_nombre = self.materia.get().upper()
