@@ -1,0 +1,171 @@
+.card-body-peluca {
+  background-color: #ffecec !important;
+}
+
+/* Estilo para el textarea */
+
+.form-outline textarea {
+  width: 100%;
+  border: 2px solid #ced4da !important;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+  resize: vertical; /* Permitir solo redimensionar verticalmente */
+  transition: border-color 0.3s, box-shadow 0.3s; /* Añadir transición suave para el cambio de borde */
+}
+
+/* Estilo al enfocar el textarea */
+
+.form-outline textarea:focus {
+  border-color: #0056b3 !important; /* Color del borde al enfocar */
+
+  border-width: 2px !important;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Efecto de sombra al enfocar */
+}
+
+/* Estilo del label para cuando el campo está enfocado o tiene texto */
+
+.form-outline textarea:focus ~ .form-label,
+.form-outline textarea:not(:placeholder-shown) ~ .form-label {
+  top: -0.75rem;
+  left: 0.75rem;
+  font-size: 1rem;
+  color: #0056b3; /* Color del label cuando el textarea está enfocado */
+}
+
+/* Estilo para el input[type="file"] */
+
+.form-outline input[type="file"] {
+  width: 100%;
+  border: 2px solid #ced4da;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.circle-picker {
+  display: flex;
+  flex-wrap: wrap; /* Permitir que los círculos se envuelvan a la siguiente línea */
+  gap: 10px; /* Espacio entre círculos */
+}
+
+.custom-circle {
+  width: calc(20% - 10px); /* Tamaño del círculo (5 círculos por fila) */
+  height: 40px; /* Puedes ajustar la altura según sea necesario */
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  display: inline-block; /* Asegúrate de que los círculos se alineen correctamente */
+  border: 2px solid transparent; /* Borde transparente por defecto */
+}
+
+.selected-circle {
+  border: 2px solid #000; /* Borde del círculo seleccionado */
+}
+
+.checkmark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white; /* Color del tilde */
+  font-size: 16px; /* Ajusta el tamaño del tilde según sea necesario */
+}
+
+.color-tooltip {
+  visibility: hidden; /* Oculto por defecto */
+  background-color: rgba(0, 0, 0, 0.75); /* Fondo oscuro */
+  color: #fff; /* Texto blanco */
+  text-align: center; /* Centrar texto */
+  border-radius: 5px; /* Bordes redondeados */
+  padding: 5px; /* Espaciado interno */
+  position: absolute; /* Posicionamiento absoluto */
+  bottom: 125%; /* Mover el tooltip arriba del círculo */
+  left: 50%; /* Centrarlo horizontalmente */
+  transform: translateX(-50%); /* Ajuste del centro */
+  z-index: 1; /* Asegúrate de que el tooltip esté por encima de otros elementos */
+  transition: visibility 0.2s ease-in-out, opacity 0.2s ease-in-out; /* Transición suave */
+  opacity: 0; /* Inicialmente transparente */
+}
+
+.custom-circle:hover {
+  transform: scale(1.1); /* Aumentar el tamaño al pasar el mouse */
+}
+
+/* Muestra el tooltip al pasar el mouse sobre el círculo */
+.custom-circle:hover .color-tooltip {
+  visibility: visible; /* Muestra el tooltip */
+  opacity: 1; /* Hacerlo visible */
+}
+
+.separator-line {
+  height: 2px; /* Altura de la línea */
+  background-color: black; /* Color de la línea */
+  margin: 10px 0; /* Margen superior e inferior */
+}
+
+.color-container,
+.description-container {
+  border-top: 2px solid #ced4da; /* Borde superior gris claro */
+  border-bottom: 2px solid #ced4da; /* Borde inferior gris claro */
+  border-radius: 0; /* Sin bordes redondeados */
+  padding: 15px; /* Espaciado interno */
+  margin-bottom: 20px; /* Margen inferior */
+}
+
+/* Agregar margen derecho solo a color-container */
+.color-container {
+  margin-right: 0px; /* Espacio horizontal entre contenedores */
+}
+
+.form-outline {
+  margin-top: 10px; /* Espacio entre la línea de separación y el textarea */
+}
+/* Alinear los bordes de la descripción con el color */
+.row {
+  display: flex !important; /* Forzar a la fila a ser flexible */
+  align-items: stretch !important; /* Alinear todos los elementos en la misma altura */
+}
+
+.imagen-container {
+  border-top: 2px solid #ced4da; /* Borde superior gris claro */
+  border-bottom: 2px solid #ced4da; /* Borde inferior gris claro */
+  border-radius: 0; /* Sin bordes redondeados */
+  padding: 15px; /* Espaciado interno */
+  margin-bottom: 20px; /* Margen inferior */
+}
+
+.tipo-cara-container {
+  border-top: 2px solid #ced4da; /* Borde superior gris claro */
+  border-bottom: 2px solid #ced4da; /* Borde inferior gris claro */
+  border-radius: 0; /* Sin bordes redondeados */
+  padding: 15px; /* Espaciado interno */
+  margin-bottom: 20px; /* Margen inferior */
+}
+
+.dropzone {
+  border: 2px dashed #007bff; /* Color del borde */
+  border-radius: 5px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.dropzone.active {
+  border-color: #28a745; /* Color del borde cuando está activo */
+}
+
+.upload-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.file-info {
+  margin-top: 10px;
+  font-weight: bold;
+}

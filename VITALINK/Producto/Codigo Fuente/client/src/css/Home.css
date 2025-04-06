@@ -1,0 +1,38 @@
+/* Ejemplo de ajustes para pantallas menores a 768px */
+@media (max-width: 768px) {
+    .container {
+      padding: 10px; /* Reduce el espacio de padding */
+    }
+  
+    h1 {
+      font-size: 1.5rem; /* Reduce el tamaño del texto */
+      text-align: center; /* Centra el título */
+    }
+  
+    img {
+      max-width: 90%; /* Ajusta el ancho de la imagen */
+    }
+  }
+
+  /* home.css */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 100px);
+    padding: 20px;
+  }
+  
+  .title {
+    font-size: clamp(1.5rem, 2vw, 2.5rem);
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .image {
+    max-width: 80vw;
+    height: auto;
+    object-fit: contain;
+  }
+  

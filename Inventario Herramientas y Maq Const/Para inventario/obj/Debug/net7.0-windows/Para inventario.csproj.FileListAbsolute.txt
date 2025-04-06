@@ -1,0 +1,126 @@
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.exe
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.dll.config
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.deps.json
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.runtimeconfig.json
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.dll
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.pdb
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\System.Data.SqlClient.dll
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\runtimes\win-arm64\native\sni.dll
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\runtimes\win-x64\native\sni.dll
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\runtimes\win-x86\native\sni.dll
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\runtimes\unix\lib\netcoreapp2.1\System.Data.SqlClient.dll
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\runtimes\win\lib\netcoreapp2.1\System.Data.SqlClient.dll
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.csproj.AssemblyReference.cache
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.actualizarInformatica.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.actualizarMaquina.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.actualizarMueble.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.agregarConsumible.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.agregarInformatica.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.agregarMaquinas.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.agregarMueble.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.consultarConsumibles.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.consultarElementosDibujo.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.consultarInformatica.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.consultarMaquina.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.consultarMueble.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.elementosDibujoAgregar.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.eliminarElementosDibujo.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.eliminarInformatica.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.eliminarMaquina.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.eliminarMueble.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.frmHerramientaBaja.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.frmHerramientas.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.frmHerramientasActualizacion.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.frmHerramientasConsultar.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.frmPrincipal.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.login.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.reponerConsumibles.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Properties.Resources.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.Consumos.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.mostrarConsumos.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.mostrarPrestamoHerramienta.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.mostrarPrestamosED.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.mostrarPrestamosMaquinas.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.prestamoED.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.prestamoHerramientas.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.prestamoMaquina.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.prestamosInformatica.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.csproj.GenerateResource.cache
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.AssemblyInfoInputs.cache
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.AssemblyInfo.cs
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.csproj.CoreCompileInputs.cache
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.csproj.CopyComplete
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.dll
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\refint\Para inventario.dll
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.pdb
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.genruntimeconfig.cache
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\ref\Para inventario.dll
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.mostrarPrestamosInformatica.resources
+C:\Users\YamiYB\OneDrive\Escritorio\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.crearUsuario.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.exe
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.dll.config
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.deps.json
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.runtimeconfig.json
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.dll
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\Para inventario.pdb
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\System.Data.SqlClient.dll
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\runtimes\win-arm64\native\sni.dll
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\runtimes\win-x64\native\sni.dll
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\runtimes\win-x86\native\sni.dll
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\runtimes\unix\lib\netcoreapp2.1\System.Data.SqlClient.dll
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\bin\Debug\net7.0-windows\runtimes\win\lib\netcoreapp2.1\System.Data.SqlClient.dll
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.csproj.AssemblyReference.cache
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.actualizarMueble.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.agregarConsumible.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.agregarInformatica.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.agregarMaquinas.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.agregarMueble.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.consultarConsumibles.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.consultarElementosDibujo.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.consultarInformatica.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.consultarMaquina.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.consultarMueble.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.crearUsuario.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.elementosDibujoAgregar.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.eliminarElementosDibujo.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.eliminarInformatica.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.eliminarMaquina.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.eliminarMueble.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.eliminarUsuarios.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.frmHerramientaBaja.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.frmHerramientas.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.frmHerramientasConsultar.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.frmPrincipal.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.login.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.reponerConsumibles.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Properties.Resources.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.Consumos.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.mostrarConsumos.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.mostrarPrestamoHerramienta.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.mostrarPrestamosED.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.mostrarPrestamosInformatica.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.mostrarPrestamosMaquinas.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.prestamoED.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.prestamoHerramientas.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.prestamoMaquina.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Transacciones.prestamosInformatica.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.csproj.GenerateResource.cache
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.AssemblyInfoInputs.cache
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.AssemblyInfo.cs
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.csproj.CoreCompileInputs.cache
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.csproj.CopyComplete
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.dll
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\refint\Para inventario.dll
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.pdb
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para inventario.genruntimeconfig.cache
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\ref\Para inventario.dll
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.reportarProblemaElementoDibujo.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.actualizarStockED.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.frmHerramientaProblema.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.actualizarStockHerramientas.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.reportarProblemaInformatica.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.actualizarStockInformatica.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.Interfaces.reportarProblemaMaquina.resources
+C:\Users\YamiYB\OneDrive\Documentos\Inventario\base-de-datos\Para inventario\obj\Debug\net7.0-windows\Para_inventario.ABM.actualizarSockMaquina.resources
