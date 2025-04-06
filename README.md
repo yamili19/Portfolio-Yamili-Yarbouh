@@ -1,4 +1,4 @@
-Este portafolio reúne los trabajos prácticos de programación que he realizado en distintas materias de mi carrera. Además, incluye dos proyectos personales desarrollados para la escuela técnica de mi comunidad:
+Este portafolio reúne los trabajos prácticos de programación que he realizado en distintas materias de mi carrera, además de distintos proyectos personales. También, incluye dos proyectos desarrollados para la escuela técnica de mi comunidad:
 * Inventario de herramientas y máquinas para la construcción: Un sistema diseñado para gestionar y organizar el equipamiento de una escuela técnica local.
 * Generador de actas y permisos de examen: Una aplicación que permite registrar a los estudiantes junto con las materias que desean rendir en un archivo de Excel. A partir de estos datos, el sistema genera automáticamente las actas de examen y los permisos correspondientes, facilitando la administración académica. 
 Dentro de la carpeta simulación se encuentran los trabajo prácticos de la materia simulación, dentro de la carpeta encontrarán el enunciado del tp y el desarrollo del mismo.
