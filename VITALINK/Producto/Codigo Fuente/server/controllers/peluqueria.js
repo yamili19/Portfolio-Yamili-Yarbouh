@@ -1,6 +1,8 @@
 const { sequelize } = require("../config/mariaDb");
 const { peluqueriaModel } = require("../models");
 const handleHttpError = require("../utils/handleError");
+const he = require('he');
+const xss = require('xss');
 
 /**
  * req: Request, res: Response
@@ -15,9 +17,19 @@ const handleHttpError = require("../utils/handleError");
 //TODO: /api/peluquerias
 const getAllPeluquerias = async (req, res) => {
   try {
-    //const peluquerias = await peluqueriaModel.findAll({});
     const peluquerias = await peluqueriaModel.findAllWithBarrio();
-    res.status(200).json(peluquerias);
+    
+    // Decodificar los campos que fueron codificados
+    const peluqueriasDecoded = peluquerias.map(peluqueria => ({
+      ...peluqueria.dataValues,
+      nombre: he.decode(peluqueria.nombre),
+      contacto: he.decode(peluqueria.contacto),
+      nroCelular: peluqueria.nroCelular ? he.decode(peluqueria.nroCelular) : null,
+      nroFijo: peluqueria.nroFijo ? he.decode(peluqueria.nroFijo) : null,
+      calle: he.decode(peluqueria.calle)
+    }));
+    
+    res.status(200).json(peluqueriasDecoded);
   } catch (error) {
     console.log("El error es: ", error);
     handleHttpError(res, "ERROR_GET_ALL_PELUQUERIAS", 500);
@@ -35,19 +47,39 @@ const getPeluqueriaByName = async (req, res) => {
       handleHttpError(res, "ERROR_PELUQUERIA_NOT_FOUND", 404);
     }
 
-    res.status(200).json(peluqueria);
+    // Decodificar los campos
+    const peluqueriaDecoded = {
+      ...peluqueria.dataValues,
+      nombre: he.decode(peluqueria.nombre),
+      contacto: he.decode(peluqueria.contacto),
+      nroCelular: peluqueria.nroCelular ? he.decode(peluqueria.nroCelular) : null,
+      nroFijo: peluqueria.nroFijo ? he.decode(peluqueria.nroFijo) : null,
+      calle: he.decode(peluqueria.calle)
+    };
+
+    res.status(200).json(peluqueriaDecoded);
   } catch (error) {
     console.log("Error, no se pudo obtener la peluquería: ", error);
     handleHttpError(res, "ERROR_GET_PELUQUERIA_BY_NAME", 500);
   }
 };
-
 //MÉTODO POST
 //TODO: /api/peluquerias
 const createPeluqueria = async (req, res) => {
   try {
-    const { body } = req;
-    const newPeluqueria = await peluqueriaModel.create(body);
+    const { nombre, contacto, nroCelular, nroFijo, barrio, calle, latitud, longitud } = req.body;
+    
+    const newPeluqueria = await peluqueriaModel.create({
+      nombre: he.encode(xss(nombre)),
+      contacto: he.encode(xss(contacto)),
+      nroCelular: nroCelular ? he.encode(xss(nroCelular.toString())) : null,
+      nroFijo: nroFijo ? he.encode(xss(nroFijo.toString())) : null,
+      barrio: Number(barrio) || null,
+      calle: he.encode(xss(calle)),
+      latitud: latitud,
+      longitud: longitud
+    });
+    
     res.status(201).json(newPeluqueria);
   } catch (error) {
     console.log("Error: ", error);
@@ -60,14 +92,25 @@ const createPeluqueria = async (req, res) => {
 const updatePeluqueria = async (req, res) => {
   try {
     const { nombre } = req.params;
-    const { body } = req;
+    const { contacto, nroCelular, nroFijo, barrio, calle, latitud, longitud } = req.body;
+    
     const peluqueria = await peluqueriaModel.findByPk(nombre);
 
     if (!peluqueria) {
-      handleHttpError(res, "PELUQUERIA_NOT_FOUND", 404);
+      return handleHttpError(res, "PELUQUERIA_NOT_FOUND", 404);
     }
 
-    await peluqueria.update(body);
+    await peluqueria.update({
+      nombre: he.encode(xss(nombre)),
+      contacto: he.encode(xss(contacto)),
+      nroCelular: nroCelular ? he.encode(xss(nroCelular.toString())) : null,
+      nroFijo: nroFijo ? he.encode(xss(nroFijo.toString())) : null,
+      barrio: Number(barrio) || null,
+      calle: he.encode(xss(calle)),
+      latitud: latitud,
+      longitud: longitud
+    });
+
     res.status(200).json(peluqueria);
   } catch (error) {
     console.log("Error: ", error);

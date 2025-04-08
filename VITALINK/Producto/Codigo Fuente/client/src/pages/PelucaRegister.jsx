@@ -11,6 +11,8 @@ import {
 import { createPeluca } from "../services/pelucaService";
 import { useNavigate } from "react-router-dom";
 import { getAllTiposCara } from "../services/tipoCaraService";
+import he from 'he';
+
 
 const PelucaRegister = () => {
   const [tiposPelo, setTiposPelo] = useState([]);
@@ -55,12 +57,12 @@ const PelucaRegister = () => {
       showLoadingAlert("Registrando...");
       // Se Crea un objeto FormData para empaquetar todos los datos, incluido la foto
       const formData = new FormData();
-      formData.append("talle", peluca.talle);
-      formData.append("color", peluca.color);
+      formData.append("talle", he.encode(peluca.talle));
+      formData.append("color", he.encode(peluca.color));
       formData.append("tipoPelo", Number(peluca.tipoPelo));
       formData.append("fechaConfeccion", peluca.fechaConfeccion);
       formData.append("estadoPeluca", Number(peluca.estadoPeluca));
-      formData.append("descripcion", peluca.descripcion);
+      formData.append("descripcion", he.encode(peluca.descripcion));
 
       if (peluca.tiposCara && peluca.tiposCara.length > 0) {
         peluca.tiposCara.forEach((tipoCaraId) => {

@@ -5,6 +5,9 @@ const { sequelize } = require("../config/mariaDb");
 const { donacionModel, donanteModel } = require("../models");
 const handleHttpError = require("../utils/handleError");
 const { sendEmailDonante, sendEmailCliente } = require("../config/emailer");
+const he = require('he');
+const xss = require('xss');
+const { DateTime } = require('luxon');
 
 /**
  * Pasar la Request y Response
@@ -14,10 +17,29 @@ const { sendEmailDonante, sendEmailCliente } = require("../config/emailer");
 const getAllDonaciones = async (req, res) => {
   try {
     const donaciones = await donacionModel.findAllWithDonante();
-    res.status(200).json(donaciones);
+
+    const sanitizedDonaciones = donaciones.map(donacion => {
+      // Accede al donante usando el alias correcto ("Donante")
+      const donante = donacion.Donante; // ¡Nota la "D" mayúscula!
+
+      return {
+        fecha: donacion.fecha,
+        mail: donacion.mail,
+        entidad: donacion.entidad ? he.encode(donacion.entidad) : null,
+        mailEnviado: donacion.mailEnviado,
+        donante: donante ? { // Solo si existe el donante
+          mail: donante.mail ? he.encode(donante.mail) : null,
+          nombre: donante.nombre ? he.encode(donante.nombre) : null,
+          apellido: donante.apellido ? he.encode(donante.apellido) : null,
+          telefono: donante.telefono ? he.encode(donante.telefono) : null,
+        } : null, // Si no hay donante, se devuelve null
+      };
+    });
+
+    res.status(200).json(sanitizedDonaciones);
   } catch (error) {
-    console.log("Error, no se pudo obtener las donaciones: ", error);
-    handleHttpError(res, "ERRROR_GET_ALL_DONACIONES", 500);
+    console.log("Error al obtener donaciones: ", error);
+    handleHttpError(res, "ERROR_GET_ALL_DONACIONES", 500);
   }
 };
 
@@ -25,63 +47,81 @@ const getDonacionByFecha = async (req, res) => {
   try {
     const { fecha } = req.params;
     const donacion = await donacionModel.findWithDonante(fecha);
+
     if (!donacion) {
       return handleHttpError(res, "ERROR_DONACION_NOT_FOUND", 404);
     }
-    res.status(200).json(donacion);
+
+    const donante = donacion.Donante; // Alias con "D" mayúscula
+
+    const sanitizedDonacion = {
+      fecha: donacion.fecha,
+      mail: donacion.mail,
+      entidad: donacion.entidad ? he.encode(donacion.entidad) : null,
+      mailEnviado: donacion.mailEnviado,
+      donante: donante ? {
+        mail: donante.mail ? he.encode(donante.mail) : null,
+        nombre: donante.nombre ? he.encode(donante.nombre) : null,
+        apellido: donante.apellido ? he.encode(donante.apellido) : null,
+        telefono: donante.telefono ? he.encode(donante.telefono) : null,
+      } : null,
+    };
+
+    res.status(200).json(sanitizedDonacion);
   } catch (error) {
-    console.log("Error, no se pudo obtener la donacion con esa fecha: ", error);
+    console.log("Error al obtener donación por fecha: ", error);
     handleHttpError(res, "ERROR_GET_BY_FECHA_DONACION", 500);
   }
 };
 
 const createDonacion = async (req, res) => {
-  //const { mail, entidad } = req.body;
   const { mail, entidad, telefono, nombre, apellido } = req.body;
-  const fecha = new Date();
-  //Se define la transacción
+  const fecha = DateTime.now().setZone('America/Argentina/Buenos_Aires');
   const transaction = await sequelize.transaction();
+
   try {
-    //Se verifica si el donante ya existe
+    // Sanitizar y hacer encoding de los datos antes de guardar
+    const sanitizedMail = xss(he.encode(mail));
+    const sanitizedEntidad = entidad ? xss(he.encode(entidad)) : null;
+    const sanitizedTelefono = telefono ? xss(he.encode(telefono)) : null;
+    const sanitizedNombre = nombre ? xss(he.encode(nombre)) : null;
+    const sanitizedApellido = apellido ? xss(he.encode(apellido)) : null;
+
     let donante = await donanteModel.findOne({
-      where: { mail },
+      where: { mail: sanitizedMail },
       transaction,
     });
 
-    // Si el donante no existe, se crea uno nuevo
     if (!donante) {
       donante = await donanteModel.create(
         {
-          mail,
-          telefono,
-          nombre,
-          apellido,
+          mail: sanitizedMail,
+          telefono: sanitizedTelefono,
+          nombre: sanitizedNombre,
+          apellido: sanitizedApellido,
         },
         { transaction }
       );
     }
-    //Se envía el correo y se verifica el estadio del envío
+
     const emailSent = await sendEmailDonante(donante);
     const mailEnviado = emailSent;
 
-    //Se crea la nueva donación
     const newDonacion = await donacionModel.create(
       {
         fecha,
-        mail,
-        entidad,
+        mail: sanitizedMail,
+        entidad: sanitizedEntidad,
         mailEnviado,
       },
-      {
-        transaction,
-      }
+      { transaction }
     );
 
     await transaction.commit();
     res.status(201).json(newDonacion);
   } catch (error) {
     await transaction.rollback();
-    console.log("Error, no se pudo registrar la donación: ", error);
+    console.log("Error al registrar la donación: ", error);
     handleHttpError(res, "ERROR_POST_DONACION", 500);
   }
 };
@@ -90,59 +130,59 @@ const updateDonacion = async (req, res) => {
   const { fecha } = req.params;
   const { mail, entidad, mailEnviado, telefono, nombre, apellido } = req.body;
 
-  // Se convierte la fecha a formato 'YYYY-MM-DD HH:MM:SS'
-  const fechaDate = new Date(fecha);
-  const formattedFecha = `${fechaDate.getFullYear()}-${String(
-    fechaDate.getMonth() + 1
-  ).padStart(2, "0")}-${String(fechaDate.getDate()).padStart(2, "0")} ${String(
-    fechaDate.getHours()
-  ).padStart(2, "0")}:${String(fechaDate.getMinutes()).padStart(
-    2,
-    "0"
-  )}:${String(fechaDate.getSeconds()).padStart(2, "0")}.000`; // Incluyendo milisegundos
+  // Sanitizar y hacer encoding de los datos
+  const sanitizedMail = xss(he.encode(mail));
+  const sanitizedEntidad = entidad ? xss(he.encode(entidad)) : null;
+  const sanitizedTelefono = telefono ? xss(he.encode(telefono)) : null;
+  const sanitizedNombre = nombre ? xss(he.encode(nombre)) : null;
+  const sanitizedApellido = apellido ? xss(he.encode(apellido)) : null;
 
   try {
-    //Se verifica si existe el donante
-    const donante = await donanteModel.findByPk(mail);
+    const donante = await donanteModel.findByPk(sanitizedMail);
     if (!donante) {
-      return handleHttpError("res", "ERROR_DONANTE_NOT_FOUND", 404);
+      return handleHttpError(res, "ERROR_DONANTE_NOT_FOUND", 404);
     }
 
-    //Si existe, se verifica la donacion hecha por el donante con la fecha del parametro
     const donacion = await donacionModel.findOne({
-      where: { fecha: formattedFecha, mail },
+      where: { fecha, mail: sanitizedMail },
     });
-    console.log("Donacion obtenida: ", JSON.stringify(donacion));
+
     if (!donacion) {
       return handleHttpError(res, "ERROR_DONACION_NOT_FOUND", 404);
     }
 
-    // Actualizar la donación
-    const [donacionActualizada, updatedDonacion] = await donacionModel.update(
-      { entidad: entidad === "" ? null : entidad, mailEnviado },
-      { where: { fecha: formattedFecha, mail }, returning: true }
-    );
+    // Actualizar con datos sanitizados
+    await donacion.update({
+      entidad: sanitizedEntidad,
+      mailEnviado,
+    });
 
-    // Actualizar el donante
-    const [donanteActualizado, updatedDonante] = await donanteModel.update(
-      { telefono, nombre, apellido },
-      { where: { mail }, returning: true }
-    );
+    await donante.update({
+      telefono: sanitizedTelefono,
+      nombre: sanitizedNombre,
+      apellido: sanitizedApellido,
+    });
 
-    // Verificar si la actualización fue exitosa
-    if (donacionActualizada === 0 || donanteActualizado === 0) {
-      return handleHttpError(res, "ERROR_UPDATE_FAILED", 500);
-    }
+    const donacionJson = await donacionModel.findWithDonante(fecha);
 
-    const donacionJson = await donacionModel.findWithDonante(formattedFecha);
+    // Aplicar encoding a la respuesta
+    const sanitizedResponse = {
+      ...donacionJson,
+      entidad: donacionJson.entidad ? he.encode(donacionJson.entidad) : null,
+      donante: {
+        ...donacionJson.donante,
+        nombre: donacionJson.donante.nombre ? he.encode(donacionJson.donante.nombre) : null,
+        apellido: donacionJson.donante.apellido ? he.encode(donacionJson.donante.apellido) : null,
+        telefono: donacionJson.donante.telefono ? he.encode(donacionJson.donante.telefono) : null,
+      },
+    };
 
-    // Devolver los datos actualizados
     res.status(200).json({
       message: "Donación actualizada con éxito",
-      data: donacionJson,
+      data: sanitizedResponse,
     });
   } catch (error) {
-    console.log("Error, no se pudo actualizar la donación");
+    console.log("Error al actualizar la donación: ", error);
     handleHttpError(res, "ERROR_PUT_DONACION", 500);
   }
 };

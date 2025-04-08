@@ -16,6 +16,7 @@ import {
   showLoadingAlert,
   showSuccessAlert,
 } from "../utils/sweetAlertGeneralize";
+import he from 'he'
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { fetchDonanteByEmail } from "../services/donanteService";
@@ -170,7 +171,7 @@ const DonationForm = ({ donacionRealizada, onSubmit, peluquerias, isEdit }) => {
 
       const donacionData = {
         mail: donacion.email.toLowerCase(),
-        entidad: donacion.entidad || null,
+        entidad: Number(donacion.entidad) || null,
         telefono: donacion.telefono.toString(),
         nombre: donacion.nombre,
         apellido: donacion.apellido,

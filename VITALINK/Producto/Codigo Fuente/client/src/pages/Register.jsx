@@ -14,7 +14,9 @@ import Loading from "../components/loading/Loading";
 
 const urlBaseBarrios = "http://localhost:8000/api/barrios/";
 const urlBasePeluquerias = "http://localhost:8000/api/peluquerias/";
-const OPEN_CAGE_API_KEY = "2feb4adcff3c43e8a815ab2ce7879f02"; // Reemplaza con tu clave de OpenCage
+const OPEN_CAGE_API_KEY = "35e9475e94ea47758df1753b46aaf09f"; // Reemplaza con tu clave de OpenCage
+import he from 'he';
+
 
 const Register = () => {
   const [barrios, setBarrios] = useState([]);
@@ -102,10 +104,12 @@ const Register = () => {
   
       const newPeluqueria = {
         ...peluqueria,
+        nombre: he.encode(peluqueria.nombre),
+        contacto: he.encode(peluqueria.contacto),
         nroCelular: peluqueria.nroCelular.toString(),
         nroFijo: peluqueria.nroFijo.toString(),
-        barrio: barrio,
-        calle: direccion, // Dirección seleccionada
+        barrio: Number(barrio) || null,
+        calle: he.encode(direccion), // Dirección seleccionada
         latitud: geometry.lat, // Agregar latitud
         longitud: geometry.lng, // Agregar longitud
       };

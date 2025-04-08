@@ -4,28 +4,76 @@
 
 const { pedidoPelucaModel } = require("../models");
 const handleHttpError = require("../utils/handleError");
+const he = require('he');
+const xss = require('xss');
 
 const getAllPedidosPeluca = async (req, res) => {
   try {
     const pedidos = await pedidoPelucaModel.findAll({
-      order: [['fechaPedido', 'DESC']], // Cambia 'fechaPedido' por el campo que deseas ordenar
+      order: [['fechaPedido', 'DESC']],
     });
-    res.status(200).json(pedidos);
+    
+    // Decodificar solo los campos que son strings codificados
+    const pedidosDecodificados = pedidos.map(pedido => {
+      const pedidoDecodificado = {...pedido.dataValues};
+      
+      // Solo decodificar si el valor es un string
+      if (typeof pedidoDecodificado.fechaPedido === 'string') {
+        pedidoDecodificado.fechaPedido = he.decode(pedidoDecodificado.fechaPedido);
+      }
+      
+      if (pedidoDecodificado.cantCabello && typeof pedidoDecodificado.cantCabello === 'string') {
+        pedidoDecodificado.cantCabello = he.decode(pedidoDecodificado.cantCabello);
+      }
+      
+      if (pedidoDecodificado.cantPelucasLlegaron && typeof pedidoDecodificado.cantPelucasLlegaron === 'string') {
+        pedidoDecodificado.cantPelucasLlegaron = he.decode(pedidoDecodificado.cantPelucasLlegaron);
+      }
+      
+      return pedidoDecodificado;
+    });
+    
+    res.status(200).json(pedidosDecodificados);
   } catch (error) {
     console.log("Error, no se pudo obtener los pedidos de pelucas: ", error);
     handleHttpError(res, "ERROR_GET_ALL_PEDIDOS_PELUCA", 500);
   }
 };
 
-
 const getPedidoPelucaByFecha = async (req, res) => {
   try {
     const { fechaPedido } = req.params;
+    
+    // Buscar el pedido sin codificar la fecha (asumiendo que en la BD está sin codificar)
     const pedido = await pedidoPelucaModel.findByPk(fechaPedido);
+    
     if (!pedido) {
       return handleHttpError(res, "ERROR_PEDIDO_NOT_FOUND", 404);
     }
-    res.status(200).json(pedido);
+    
+    // Crear una copia del objeto para no modificar el original
+    const pedidoResponse = {...pedido.dataValues};
+    
+    // Decodificar solo los campos que son strings y están codificados
+    if (typeof pedidoResponse.fechaPedido === 'string') {
+      try {
+        pedidoResponse.fechaPedido = he.decode(pedidoResponse.fechaPedido);
+      } catch (e) {
+        // Si falla la decodificación, dejar el valor original
+        console.log('El campo fechaPedido no necesitaba decodificación');
+      }
+    }
+    
+    // Repetir para otros campos si es necesario
+    if (pedidoResponse.cantCabello && typeof pedidoResponse.cantCabello === 'string') {
+      try {
+        pedidoResponse.cantCabello = he.decode(pedidoResponse.cantCabello);
+      } catch (e) {
+        console.log('El campo cantCabello no necesitaba decodificación');
+      }
+    }
+    
+    res.status(200).json(pedidoResponse);
   } catch (error) {
     console.log("Error, no se pudo obtener el pedido de la fecha: ", error);
     handleHttpError(res, "ERROR_GET_BY_FECHA_PEDIDO_PELUCA", 500);
@@ -44,26 +92,36 @@ const cantidadPelucasEstimadas = (cantidadCabello) => {
 const createPedidoPeluca = async (req, res) => {
   const { fechaPedido, cantCabello } = req.body;
   try {
-    //Se verifica que no exista un pedido con la fecha ingresada
+    // Solo codificar si es string
+    const fechaCodificada = typeof fechaPedido === 'string' 
+      ? he.encode(xss(fechaPedido)) 
+      : fechaPedido;
+    
+    const cantCabelloCodificada = typeof cantCabello === 'string'
+      ? he.encode(xss(cantCabello))
+      : cantCabello.toString(); // Convertir números a string
+
     const existPedido = await pedidoPelucaModel.findOne({
-      where: { fechaPedido },
+      where: { fechaPedido: fechaCodificada },
     });
+    
     if (existPedido) {
       return handleHttpError(res, "ERROR_PEDIDO_EXIST", 400);
     }
 
-    //Si no existe se procede a registrar el pedido
     const cantPelucasEstimadas = cantidadPelucasEstimadas(cantCabello);
     const pedido = {
-      fechaPedido,
-      cantCabello,
+      fechaPedido: fechaCodificada,
+      cantCabello: cantCabelloCodificada,
       cantPelucasEstimadas,
       cantPelucasLlegaron: null,
     };
+    
     const newPedidoPeluca = await pedidoPelucaModel.create(pedido);
+    
     res.status(201).json({
       message: "Nuevo pedido de peluca registrado exitosamente",
-      data: newPedidoPeluca,
+      data: newPedidoPeluca, // No decodificar aquí, el frontend puede manejar la decodificación
     });
   } catch (error) {
     console.log("Error, no se pudo crear el pedido de peluca: ", error);
@@ -71,35 +129,40 @@ const createPedidoPeluca = async (req, res) => {
   }
 };
 
+
 const updatePedidoPeluca = async (req, res) => {
   const { fechaPedido } = req.params;
-  const { body } = req;
+  const { cantPelucasLlegaron, cantCabello } = req.body;
+  
   try {
-    //Se verifica si existe un pedido con la fecha ingresada
-    const pedido = await pedidoPelucaModel.findByPk(fechaPedido);
+    const pedido = await pedidoPelucaModel.findByPk(he.encode(xss(fechaPedido)));
+    
     if (!pedido) {
       return handleHttpError(res, "ERROR_PEDIDO_NOT_FOUND", 404);
     }
 
-    let cantLlegaron = null;
-    if (body.cantPelucasLlegaron) {
-      cantLlegaron = body.cantPelucasLlegaron;
-    }
-    //Si existe, se actualizan los datos
-    const newCantidadPelucasEstimadas = cantidadPelucasEstimadas(
-      body.cantCabello
-    );
-
+    const newCantidadPelucasEstimadas = cantidadPelucasEstimadas(cantCabello);
+    
     const pedidoActualizado = {
-      ...body,
+      cantCabello: he.encode(xss(cantCabello.toString())),
       cantPelucasEstimadas: newCantidadPelucasEstimadas,
-      cantPelucasLlegaron: cantLlegaron,
+      cantPelucasLlegaron: cantPelucasLlegaron ? he.encode(xss(cantPelucasLlegaron.toString())) : null,
     };
 
     await pedido.update(pedidoActualizado);
-    res
-      .status(200)
-      .json({ message: "Pedido actualizado correctamente", data: pedido });
+    
+    // Decodificar para la respuesta
+    const responseData = {
+      ...pedido.dataValues,
+      fechaPedido: he.decode(pedido.fechaPedido),
+      cantCabello: he.decode(pedido.cantCabello),
+      cantPelucasLlegaron: pedido.cantPelucasLlegaron ? he.decode(pedido.cantPelucasLlegaron) : null
+    };
+    
+    res.status(200).json({ 
+      message: "Pedido actualizado correctamente", 
+      data: responseData 
+    });
   } catch (error) {
     console.log("Error, no se pudo actualizar el pedido: ", error);
     handleHttpError(res, "ERROR_PUT_PEDIDO", 500);
@@ -126,15 +189,26 @@ const deletePedidoPeluca = async (req, res) => {
 };
 
 const getPedidosEntreFechas = async (req, res) => {
-  const {fechaInicio, fechaFin} = req.params;
-  try{
-    const result = await pedidoPelucaModel.obtenerPedidosEntreFechas(fechaInicio, fechaFin);
-    res.status(200).json(result);
-  }catch (error){
-    console.log(
-      "Error al intentar obtener los pedidos entre las fechas seleccionadas: ", error
-    ); 
-    handleHttpError(res, "ERROR_GET_PEDIDOS", 500)
+  const { fechaInicio, fechaFin } = req.params;
+  try {
+    // Codificar las fechas para la búsqueda
+    const encodedInicio = he.encode(xss(fechaInicio));
+    const encodedFin = he.encode(xss(fechaFin));
+    
+    const result = await pedidoPelucaModel.obtenerPedidosEntreFechas(encodedInicio, encodedFin);
+    
+    // Decodificar los resultados
+    const resultDecodificado = result.map(item => ({
+      ...item.dataValues,
+      fechaPedido: he.decode(item.fechaPedido),
+      cantCabello: item.cantCabello ? he.decode(item.cantCabello) : null,
+      cantPelucasLlegaron: item.cantPelucasLlegaron ? he.decode(item.cantPelucasLlegaron) : null
+    }));
+    
+    res.status(200).json(resultDecodificado);
+  } catch (error) {
+    console.log("Error al obtener pedidos entre fechas: ", error);
+    handleHttpError(res, "ERROR_GET_PEDIDOS", 500);
   }
 };
 

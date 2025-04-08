@@ -17,7 +17,7 @@ const sequelize = new Sequelize(database, username, password, {
     connectTimeout: 60000, // 60 segundos
     charset: "utf8mb4",
   },
-  //timezone: "America/Argentina/Buenos_Aires",
+  timezone: "America/Argentina/Buenos_Aires",
   pool: {
     max: 10, // Número máximo de conexiones en el pool
     min: 0, // Número mínimo de conexiones en el pool

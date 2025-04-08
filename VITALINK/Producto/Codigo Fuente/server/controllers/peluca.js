@@ -10,6 +10,9 @@ const {
 const handleHttpError = require("../utils/handleError");
 const fs = require("fs");
 const path = require("path");
+const he = require('he');
+const xss = require('xss');
+
 
 const getAllPelucas = async (req, res) => {
   try {
@@ -80,14 +83,38 @@ const getPelucaByCodigo = async (req, res) => {
   try {
     const { codigo } = req.params;
 
-    const peluca =
-      await pelucaModel.findPelucaByCodigoWithTipoPeloAndEstadoPeluca(codigo);
+    const peluca = await pelucaModel.findPelucaByCodigoWithTipoPeloAndEstadoPeluca(codigo);
 
     if (!peluca) {
       return handleHttpError(res, "ERROR_PELUCA_NOT_FOUND", 404);
     }
 
-    res.status(200).json(peluca);
+    // Función para sanitizar un objeto recursivamente
+    const sanitizeObject = (obj) => {
+      const result = {};
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          // Sanitizar solo strings
+          if (typeof obj[key] === 'string') {
+            result[key] = he.encode(xss(obj[key]));
+          } 
+          // Si es un objeto, sanitizar recursivamente
+          else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            result[key] = sanitizeObject(obj[key]);
+          }
+          // Mantener otros tipos de valores
+          else {
+            result[key] = obj[key];
+          }
+        }
+      }
+      return result;
+    };
+
+    // Sanitizar la peluca antes de enviarla
+    const pelucaSanitizada = sanitizeObject(peluca.toJSON ? peluca.toJSON() : peluca);
+
+    res.status(200).json(pelucaSanitizada);
   } catch (error) {
     console.log("Error, no se pudo obtener la peluca por codigo: ", error);
     handleHttpError(res, "ERROR_GET_PELUCA_BY_CODE", 500);
@@ -96,14 +123,16 @@ const getPelucaByCodigo = async (req, res) => {
 
 const createPeluca = async (req, res) => {
   try {
+
+    const talle = he.encode(xss(req.body.talle));
+    const color = he.encode(xss(req.body.color));
+    const descripcion = he.encode(xss(req.body.descripcion))
+
     const {
-      talle,
-      color,
       tipoPelo,
       fechaConfeccion,
       estadoPeluca,
       tieneApross,
-      descripcion,
       tiposCara,
     } = req.body;
     const foto = req.file ? req.file.path : null;
@@ -111,12 +140,12 @@ const createPeluca = async (req, res) => {
     const newPeluca = await pelucaModel.create({
       talle,
       color,
-      tipoPelo,
-      fechaConfeccion,
-      estadoPeluca,
+      tipoPelo: Number(tipoPelo),
+      fechaConfeccion: Date(fechaConfeccion),
+      estadoPeluca: Number(estadoPeluca),
       foto,
       tieneApross,
-      descripcion,
+      descripcion
     });
 
     if (Array.isArray(tiposCara) && tiposCara.length > 0) {
@@ -149,14 +178,16 @@ const createPeluca = async (req, res) => {
 const updatePeluca = async (req, res) => {
   try {
     const { codigo } = req.params;
+
+    const talle = he.encode(xss(req.body.talle));
+    const color = he.encode(xss(req.body.color));
+    const descripcion = he.encode(xss(req.body.descripcion));
+
     const {
-      talle,
-      color,
       tipoPelo,
       fechaConfeccion,
       estadoPeluca,
       tieneApross,
-      descripcion,
     } = req.body;
     const nuevaFoto = req.file ? req.file.path : null;
 
@@ -183,9 +214,9 @@ const updatePeluca = async (req, res) => {
     await peluca.update({
       talle,
       color,
-      tipoPelo,
-      fechaConfeccion,
-      estadoPeluca,
+      tipoPelo: Number(tipoPelo),
+      fechaConfeccion: Date(fechaConfeccion).toString(),
+      estadoPeluca: Number(estadoPeluca),
       foto: nuevaFoto || peluca.foto,
       tieneApross,
       descripcion,

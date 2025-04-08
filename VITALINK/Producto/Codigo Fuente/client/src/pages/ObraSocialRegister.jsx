@@ -7,6 +7,8 @@ import {
   showLoadingAlert,
   showSuccessAlert,
 } from "../utils/sweetAlertGeneralize";
+import he from 'he';
+
 
 const ObraSocialRegister = () => {
   const navigate = useNavigate();
@@ -19,7 +21,7 @@ const ObraSocialRegister = () => {
     try {
       showLoadingAlert("Registrando...");
       const obraSocialData = {
-        nombre: obraSocial.nombre.toString(),
+        nombre: he.encode(obraSocial.nombre).toString(),
       };
       const newObraSocial = await createObraSocial(obraSocialData);
       MySwal.close();

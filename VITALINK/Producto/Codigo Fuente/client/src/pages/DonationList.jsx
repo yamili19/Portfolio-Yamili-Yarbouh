@@ -34,6 +34,7 @@ const DonationList = () => {
     }
   };
 
+
   const handleDeleteDonacion = async (fecha) => {
     try {
       showLoadingAlert("Eliminando...");
@@ -53,12 +54,19 @@ const DonationList = () => {
     let filtered = donaciones;
 
     if (filters.fecha) {
-      filtered = filtered.filter(
-        (donacion) =>
-          new Date(donacion.fecha).toISOString().split("T")[0] ===
-          new Date(filters.fecha).toISOString().split("T")[0]
-      );
+      // Convertir la fecha del filtro a formato YYYY-MM-DD
+      const filterDate = new Date(filters.fecha);
+      const filterDateStr = filterDate.toISOString().split('T')[0];
+      
+      filtered = filtered.filter(donacion => {
+        // Convertir la fecha de la donación a objeto Date si no lo es
+        const donationDate = new Date(donacion.fecha);
+        // Formatear a YYYY-MM-DD para comparación
+        const donationDateStr = donationDate.toISOString().split('T')[0];
+        return donationDateStr === filterDateStr;
+      });
     }
+
     if (filters.emailDonante) {
       filtered = filtered.filter((donacion) =>
         donacion.mail.toLowerCase().includes(filters.emailDonante.toLowerCase())
@@ -74,13 +82,17 @@ const DonationList = () => {
     }
 
     if (filters.donante) {
-      filtered = filtered.filter((donacion) =>
-        (donacion.Donante.apellido + " " + donacion.Donante.nombre)
-          .toLowerCase()
-          .includes(filters.donante.toLowerCase())
-      );
+      const donanteFiltro = filters.donante.toLowerCase();
+      filtered = filtered.filter((donacion) => {
+        const { apellido = "", nombre = "" } = donacion.donante;
+        const fullName = `${apellido} ${nombre}`.toLowerCase();
+        const reversedFullName = `${nombre} ${apellido}`.toLowerCase();
+        return (
+          fullName.includes(donanteFiltro) ||
+          reversedFullName.includes(donanteFiltro)
+        );
+      });
     }
-
     setFilteredDonaciones(filtered);
   };
 

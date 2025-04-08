@@ -5,7 +5,25 @@ const { dbConnectionMariaDb } = require("./config/mariaDb");
 
 const app = express();
 const apiRouter = require("./routes");
+const sanitizeMiddleware = require('./middleware/sanitizeMiddleware');
 app.use(cors());
+
+app.use(sanitizeMiddleware);
+
+app.use((req, res, next) => {
+  // Configurar headers de seguridad
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  
+  // Content Security Policy
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'none'; object-src 'none'"
+  );
+  
+  next();
+});
 
 //Para porder hacer peticiones post
 // Aumentar el límite del cuerpo de la solicitud para permitir imágenes grandes

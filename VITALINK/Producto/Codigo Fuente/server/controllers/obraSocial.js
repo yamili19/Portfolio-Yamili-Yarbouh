@@ -4,11 +4,20 @@
 
 const { obraSocialModel } = require("../models");
 const handleHttpError = require("../utils/handleError");
+const he = require('he');
+const xss = require('xss');
 
 const getAllObrasSociales = async (req, res) => {
   try {
     const obrasSociales = await obraSocialModel.findAll({});
-    res.status(200).json(obrasSociales);
+    
+    // Decodificar los nombres antes de enviar la respuesta
+    const obrasDecodificadas = obrasSociales.map(obra => ({
+      ...obra.dataValues,
+      nombre: he.decode(obra.nombre) // Decodificar el nombre
+    }));
+    
+    res.status(200).json(obrasDecodificadas);
   } catch (error) {
     console.log("Error, no se pudo obtener las obras sociales: ", error);
     handleHttpError(res, "ERROR_GET_ALL_OBRAS_SOCIALES", 500);
@@ -24,7 +33,13 @@ const getObraSocialById = async (req, res) => {
       return handleHttpError(res, "ERROR_OBRA_SOCIAL_NOT_FOUND", 404);
     }
 
-    res.status(200).json(obraSocial);
+    // Decodificar el nombre antes de enviar
+    const obraDecodificada = {
+      ...obraSocial.dataValues,
+      nombre: he.decode(obraSocial.nombre)
+    };
+
+    res.status(200).json(obraDecodificada);
   } catch (error) {
     console.log("Error, no se pudo obtener la obra social con ese ID: ", error);
     handleHttpError(res, "ERROR_GET_OBRA_SOCIAL_BY_ID", 500);
@@ -33,12 +48,22 @@ const getObraSocialById = async (req, res) => {
 
 const createObraSocial = async (req, res) => {
   try {
-    const { body } = req;
-    const newObraSocial = await obraSocialModel.create(body);
-    res.status(201).json({
-      message: "Nueva obra social creada existosamente",
-      data: newObraSocial,
+    const { nombre } = req.body;
+    const newObraSocial = await obraSocialModel.create({ 
+      nombre: he.encode(xss(nombre))
     });
+
+    // Decodificar para la respuesta
+    const responseData = {
+      ...newObraSocial.dataValues,
+      nombre: he.decode(newObraSocial.nombre)
+    };
+
+    res.status(201).json({
+      message: "Nueva obra social creada exitosamente",
+      data: responseData
+    });
+
   } catch (error) {
     console.log("Error, no se pudo crear una nueva social: ", error);
     handleHttpError(res, "ERROR_POST_OBRA_SOCIAL", 500);
@@ -48,15 +73,24 @@ const createObraSocial = async (req, res) => {
 const updateObraSocial = async (req, res) => {
   try {
     const { id } = req.params;
-    const { body } = req;
+    const { nombre } = req.body;
     const obraSocial = await obraSocialModel.findByPk(id);
 
     if (!obraSocial) {
       return handleHttpError(res, "ERROR_OBRA_SOCIAL_NOT_FOUND", 404);
     }
 
-    await obraSocial.update(body);
-    res.status(200).json(obraSocial);
+    await obraSocial.update({
+      nombre: he.encode(xss(nombre)) // Codificar al actualizar
+    });
+    
+    // Decodificar para la respuesta
+    const responseData = {
+      ...obraSocial.dataValues,
+      nombre: he.decode(obraSocial.nombre)
+    };
+    
+    res.status(200).json(responseData);
   } catch (error) {
     console.log("Error, no se pudo actualizar la obra social: ", error);
     handleHttpError(res, "ERROR_PUT_OBRA_SOCIAL", 500);

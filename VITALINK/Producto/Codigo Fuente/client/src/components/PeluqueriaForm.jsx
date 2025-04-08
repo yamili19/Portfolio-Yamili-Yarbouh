@@ -45,7 +45,7 @@ const PeluqueriaForm = ({ onSubmit, peluqueria, isReadOnly, barrios }) => {
       const res = await axios.get("https://api.opencagedata.com/geocode/v1/json", {
         params: {
           q: query,
-          key: "2feb4adcff3c43e8a815ab2ce7879f02", // Tu API Key de OpenCage
+          key: "35e9475e94ea47758df1753b46aaf09f", // Tu API Key de OpenCage
         },
       });
 
@@ -71,7 +71,7 @@ const PeluqueriaForm = ({ onSubmit, peluqueria, isReadOnly, barrios }) => {
       const res = await axios.get("https://api.opencagedata.com/geocode/v1/json", {
         params: {
           q: calle,
-          key: "2feb4adcff3c43e8a815ab2ce7879f02", // Tu API Key de OpenCage
+          key: "35e9475e94ea47758df1753b46aaf09f", // Tu API Key de OpenCage
         },
       });
 
