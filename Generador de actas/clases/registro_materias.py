@@ -8,6 +8,8 @@ from modelos.init import Materia, DetallePermiso, Permiso, Alumno
 from sqlalchemy.exc import IntegrityError
 
 
+NOTA_APROBACION = 6
+
 class RegistroMateriasApp(tk.Toplevel):
     def __init__(self, parent, session):  # Agregar parámetro parent
         super().__init__(parent)
@@ -29,7 +31,7 @@ class RegistroMateriasApp(tk.Toplevel):
         TablaPermisos(self, self.session)
 
     def validate_dni(self, new_value):
-        # Valida que sólo contenga números
+        # Valida que solo contenga números
         return new_value.isdigit() or new_value == ""
 
         
@@ -92,8 +94,8 @@ class RegistroMateriasApp(tk.Toplevel):
         self.combo_especialidad.grid(row=2, column=1, padx=5, pady=5)
         self.combo_especialidad.bind("<<ComboboxSelected>>", self.actualizar_materias)
 
-        # Frame para selección de materias
-        materias_frame = ttk.LabelFrame(main_frame, text="Selección de Materias")
+        # Frame para seleccion de materias
+        materias_frame = ttk.LabelFrame(main_frame, text="Seleccion de Materias")
         materias_frame.pack(fill='x', pady=10)
 
         ttk.Label(materias_frame, text="Materia:").grid(row=0, column=0, padx=5, pady=5)
@@ -105,7 +107,7 @@ class RegistroMateriasApp(tk.Toplevel):
                                       values=self.master.generar_cursos(), width=10)
         self.combo_curso.grid(row=0, column=3, padx=5, pady=5)
 
-        ttk.Label(materias_frame, text="Condición:").grid(row=0, column=4, padx=5, pady=5)
+        ttk.Label(materias_frame, text="Condicion:").grid(row=0, column=4, padx=5, pady=5)
         self.combo_condicion = ttk.Combobox(materias_frame, textvariable=self.condicion, 
                                          values=["LIBRE", "REGULAR"], width=12)
         self.combo_condicion.grid(row=0, column=5, padx=5, pady=5)
@@ -116,7 +118,7 @@ class RegistroMateriasApp(tk.Toplevel):
 
         ttk.Button(btn_frame, text="➕ Agregar Materia", style='Secondary.TButton',
                  command=self.agregar_materia).pack(side='left', padx=5)
-        ttk.Button(btn_frame, text="➖ Eliminar Selección", style='Danger.TButton',
+        ttk.Button(btn_frame, text="➖ Eliminar Seleccion", style='Danger.TButton',
                  command=self.eliminar_materia).pack(side='left', padx=5)
 
         # Listbox con scrollbar
@@ -135,14 +137,14 @@ class RegistroMateriasApp(tk.Toplevel):
         self.listbox.pack(fill='both', expand=True)
         scrollbar.config(command=self.listbox.yview)
 
-        # Botón final
+        # Boton final
         action_frame = ttk.Frame(main_frame)
         action_frame.pack(fill='x', pady=20)
 
         ttk.Button(action_frame, text="💾 Guardar Registro", 
                  style='TButton', command=self.guardar_registro).pack(pady=10)
         
-        # Botón para mostrar tabla
+        # Boton para mostrar tabla
         btn_frame_tabla = ttk.Frame(main_frame)
         btn_frame_tabla.pack(pady=15, fill='x')
         
@@ -159,7 +161,7 @@ class RegistroMateriasApp(tk.Toplevel):
             del self.materias_seleccionadas[index]
             self.listbox.delete(index)
         else:
-            messagebox.showinfo("Información", "Seleccione una materia para eliminar.")
+            messagebox.showinfo("Informacion", "Seleccione una materia para eliminar.")
     
     
     def actualizar_materias(self, event=None):
@@ -173,13 +175,71 @@ class RegistroMateriasApp(tk.Toplevel):
     def filtrar_materias(self, event=None):
         filtrar_materias(self.combo_materia, self.lista_materias)
 
+
+
+    def correlativa_aprobada(self, dni, correlativa_id):
+        if not dni:
+            return False
+        correlativa_aprobada = (
+            self.session.query(DetallePermiso)
+            .join(Permiso, Permiso.nro == DetallePermiso.id_permiso)
+            .filter(
+                Permiso.dni == dni,
+                DetallePermiso.materia == correlativa_id,
+                DetallePermiso.nota >= NOTA_APROBACION
+            )
+            .first()
+        )
+        if correlativa_aprobada is None:
+            return False
+        else:
+            return True
+
     def agregar_materia(self):
-        materia = self.combo_materia.get()
-        condicion = self.condicion.get()
-        if materia and condicion:
-            self.materias_seleccionadas.append((materia.split(" - ")[0], condicion))
-            self.listbox.insert(tk.END, f"{materia.split(' - ')[1]} ({condicion})")
-    
+        materia_valor = self.combo_materia.get().strip()
+        condicion_valor = self.condicion.get().strip()
+
+        if not materia_valor or not condicion_valor:
+            messagebox.showerror("Error", "Seleccione una materia y una condicion")
+            return
+
+        try:
+            materia_id_str, _ = materia_valor.split(" - ", 1)
+            materia_id = int(materia_id_str)
+        except (ValueError, IndexError):
+            messagebox.showerror("Error", "Formato de materia invalido")
+            return
+
+        if any(int(mid) == materia_id for mid, _ in self.materias_seleccionadas):
+            messagebox.showwarning("Aviso", "La materia ya fue agregada a la lista")
+            return
+
+        materia_obj = self.session.query(Materia).get(materia_id)
+        if not materia_obj:
+            messagebox.showerror("Error", "La materia seleccionada no existe")
+            return
+
+        if materia_obj.correlativa:
+            correlativa_obj = self.session.query(Materia).get(materia_obj.correlativa)
+            if not correlativa_obj:
+                messagebox.showerror("Error", "La materia correlativa configurada no existe")
+                return
+
+            dni_valor = self.dni.get().strip()
+            if not dni_valor:
+                messagebox.showerror("Error", "Ingrese el DNI del alumno para validar correlativas")
+                return
+
+            if not self.correlativa_aprobada(dni_valor, correlativa_obj.id):
+                messagebox.showerror(
+                    "Correlativa pendiente",
+                    f"El alumno debe aprobar {correlativa_obj.nombre} antes de inscribirse en {materia_obj.nombre}."
+                )
+                return
+
+        self.materias_seleccionadas.append((str(materia_id), condicion_valor))
+        self.listbox.insert(tk.END, f"{materia_obj.nombre} ({condicion_valor})")
+
     def validar_campos(self):
         errores = []
         
@@ -193,7 +253,7 @@ class RegistroMateriasApp(tk.Toplevel):
         if not self.materia.get():
             errores.append("Materia")
         if not self.condicion.get():
-            errores.append("Condición")
+            errores.append("Condicion")
         if not self.curso.get():
             errores.append("Curso")
         
@@ -205,7 +265,7 @@ class RegistroMateriasApp(tk.Toplevel):
         if errores:
             mensaje = "Faltan completar los siguientes campos:\n"
             mensaje += "\n".join(f"- {campo}" for campo in errores)
-            messagebox.showerror("Error de validación", mensaje)
+            messagebox.showerror("Error de validacion", mensaje)
             return False
         
         # Validar modalidad usando ORM
@@ -220,9 +280,9 @@ class RegistroMateriasApp(tk.Toplevel):
 
         if not self.validar_campos():
             return
-        # Validación adicional del DNI
+        # Validacion adicional del DNI
         if not self.dni.get().isdigit() or len(self.dni.get()) < 7:
-            messagebox.showerror("Error", "DNI inválido: Debe contener sólo números y tener al menos 7 dígitos")
+            messagebox.showerror("Error", "DNI inválido: Debe contener solo números y tener al menos 7 dígitos")
             return
         
         try:
@@ -270,7 +330,7 @@ class RegistroMateriasApp(tk.Toplevel):
             messagebox.showerror("Error", f"Error inesperado: {str(e)}")
 
     def limpiar_formulario(self):
-        # Código para limpiar los campos
+        # Codigo para limpiar los campos
         self.dni.set('')
         self.nombre.set('')
         self.especialidad.set('')
