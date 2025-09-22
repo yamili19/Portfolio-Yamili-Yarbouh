@@ -1,20 +1,24 @@
+from pathlib import Path
+
 from clases.main_app import MainApp
-# Agrega estas importaciones al inicio del archivo
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from modelos.init import Base
+
+
 def main():
-    # Configurar SQLAlchemy
-    DATABASE_URL = "mysql+mysqlconnector://sql10763670:ZLADxTPaZh@sql10.freesqldatabase.com:3306/sql10763670"
-    engine = create_engine(DATABASE_URL)
-    Base.metadata.create_all(engine)  # Crear tablas si no existen
+    db_path = Path(__file__).resolve().parent / "actas.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    engine = create_engine(database_url, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
 
     app = MainApp(session)
     app.mainloop()
-    
+
     session.close()
+
 
 if __name__ == "__main__":
     main()
